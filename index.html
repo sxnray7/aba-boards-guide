@@ -54,6 +54,21 @@ dialog textarea{min-height:105px;margin:6px 0 14px}.comment-actions{display:flex
 nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your study text here…";color:var(--muted);pointer-events:none}
 #outline-form label{display:block;margin-top:10px}
 #outline-form input{width:100%;margin:4px 0 10px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+
+.topic-row{grid-template-columns:24px minmax(0,1fr) 28px;margin-left:0}
+.topic-row .topic-title{grid-column:2}
+.topic-row .subsection-add{grid-column:3}
+.topic-row .topic-toggle{grid-column:1;margin:0;padding:4px 0;text-align:center;min-height:32px}
+.topic-children{margin-left:8px;padding-left:3px;border-left:1px solid var(--line)}
+.node-progress{display:block;font-size:.8125rem;font-weight:500;color:var(--muted)}
+.node-progress:empty{display:none}
+#completion-control,#branch-progress{margin:8px 0 0;color:inherit}
+#completion-control{display:inline-flex;align-items:center;gap:6px}
+
+.editor .study-outline{margin:12px 0 16px}
+.editor .study-outline h3{margin:0 0 8px}
+.editor .study-outline ul{list-style:none;padding-inline-start:16px;margin:4px 0 0}
+.editor .study-outline li+li{margin-top:5px}
 .cloud-panel{max-width:420px;margin:22px auto;padding:18px}.cloud-panel label{display:block}.cloud-panel input{display:block;max-width:100%;width:100%;margin:6px 0 12px;padding:8px;font:inherit}.cloud-panel:has(form[hidden]):has(#cloud-onboard[hidden]){padding:0;border:0;margin:8px auto;background:none}.cloud-panel p{margin:0;text-align:center}</style>
 </head>
 <body>
@@ -68,13 +83,13 @@ nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your stu
 </section><div class="layout" id="guide-layout" hidden>
 
 <aside class="panel sidebar"><h2>Exam outlines</h2><nav aria-label="Study topics" id="outline"></nav><div class="sidebar-progress"><div id="progress-label" class="meta"></div><progress id="progress" aria-labelledby="progress-label"></progress></div></aside>
-<main><section class="hero"><p class="meta" id="exam"></p><div class="hero-heading"><h1 id="title"></h1><button id="edit-topic">Edit</button></div><p id="intro"></p></section>
+<main id="study-main"><section class="hero"><p class="meta" id="exam"></p><div class="hero-heading"><h1 id="title"></h1><button id="edit-topic">Edit</button></div><p id="intro"></p><label id="completion-control" hidden><input type="checkbox" id="complete-topic"> Mark topic complete</label><p id="branch-progress" hidden></p></section>
 <section class="panel study"><div class="study-head"><h2>Study text</h2><button id="bookmark" aria-pressed="false"></button></div>
 <div class="toolbar" role="group" aria-label="Text formatting"><button data-command="bold" aria-label="Bold"><b>Bold</b></button><button data-command="italic" aria-label="Italic"><i>Italic</i></button><span class="highlight-controls"><button data-command="hiliteColor"><span class="highlight" id="highlight-swatch" aria-hidden="true"></span>Highlight</button><select id="highlight-presets" aria-label="Highlight preset"><option value="#ffe380">Yellow</option><option value="#bcebd0">Green</option><option value="#b8ddff">Blue</option><option value="#ffc5dd">Pink</option><option value="#dfccff">Purple</option><option value="#ffd0a3">Orange</option><option value="" disabled>Custom</option></select><input type="color" id="highlight-color" aria-label="Custom highlight color" title="Open full-spectrum color picker"></span><button data-command="removeFormat">Clear formatting</button></div>
 <p class="meta" id="format-help">Select text to format it or add a comment. Click dotted-underlined text to open its comment.</p>
 <p class="meta" id="image-status" role="status" hidden></p>
 <div id="editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Editable study text" aria-describedby="format-help"></div><section class="checklist"><div class="checklist-heading"><h3>Review checklist</h3><button id="checklist-edit" aria-label="Edit review checklist">Edit</button></div><div id="checks"></div></section></section></main>
-<aside class="panel notes"><div class="notes-head"><h2>Side notes</h2></div><p class="meta" id="notes-topic"></p><textarea id="notes" aria-label="Notes for this topic" placeholder="Add a memory hook, question, or takeaway…"></textarea><p class="meta" id="save-status" role="status"></p></aside>
+<aside class="panel notes" id="study-notes"><div class="notes-head"><h2>Side notes</h2></div><p class="meta" id="notes-topic"></p><textarea id="notes" aria-label="Notes for this topic" placeholder="Add a memory hook, question, or takeaway…"></textarea><p class="meta" id="save-status" role="status"></p></aside>
 </div>
 <div id="image-size-panel" class="image-size-panel" role="group" aria-label="Image size" contenteditable="false" hidden>
 <label for="image-width">Image width</label><input type="range" id="image-width" min="10" max="100" step="1" aria-describedby="image-width-unit"><span id="image-width-unit" hidden>Percent of study text width</span><output id="image-width-value" for="image-width"></output><button id="image-size-done" type="button">Done</button>
@@ -88,7 +103,7 @@ nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your stu
 <form id="outline-form"><h2 id="outline-title"></h2>
 <label for="outline-name" id="outline-name-label"></label><input id="outline-name" required maxlength="100">
 <div id="outline-description-field" hidden><label for="outline-description">Description</label><textarea id="outline-description"></textarea></div>
-<div class="comment-actions"><button type="button" id="outline-cancel">Cancel</button><button id="outline-submit"></button></div>
+<div class="comment-actions"><button type="button" id="outline-remove" hidden></button><button type="button" id="outline-cancel">Cancel</button><button id="outline-submit"></button></div>
 </form></dialog>
 <dialog id="checklist-dialog" aria-labelledby="checklist-title">
 <form id="checklist-form"><h2 id="checklist-title">Edit review checklist</h2><div id="checklist-rows"></div>
@@ -97,6 +112,1374 @@ nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your stu
 </form></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
+const officialOutline = [
+  ["BASIC", "I.A", null, "A.", "Basic Sciences"],
+  ["BASIC", "I.A.1", "I.A", "1.", "Anatomy"],
+  ["BASIC", "I.A.1.a", "I.A.1", "a.", "Topographical Anatomy as Landmarks"],
+  ["BASIC", "I.A.1.a.1", "I.A.1.a", "1)", "Neck: Cricothyroid Membrane, Internal and External Jugular Veins, Thoracic Duct, Carotid and Vertebral Arteries, Stellate Ganglion, Cervical Spine Landmarks (Vertebra Prominens, Chassaignac’s Tubercle), Hyoid Bone, Superficial Cervical Plexus"],
+  ["BASIC", "I.A.1.a.2", "I.A.1.a", "2)", "Chest: Pulmonary Lobes, Cardiac Landmarks, Subclavian Vein"],
+  ["BASIC", "I.A.1.a.3", "I.A.1.a", "3)", "Pelvis and Back: Vertebral Level of Topographical Landmarks, Caudal Space"],
+  ["BASIC", "I.A.1.a.4", "I.A.1.a", "4)", "Extremities: Relationship of Bones, Nerves, and Arteries"],
+  ["BASIC", "I.A.1.a.5", "I.A.1.a", "5)", "Dermatome Anatomy: Sensory and Motor"],
+  ["BASIC", "I.A.1.b", "I.A.1", "b.", "Radiological and Ultrasound Anatomy"],
+  ["BASIC", "I.A.1.b.1", "I.A.1.b", "1)", "Chest (Including CT and MRI)"],
+  ["BASIC", "I.A.1.b.2", "I.A.1.b", "2)", "Brain and Skull (Including CT and MRI)"],
+  ["BASIC", "I.A.1.b.3", "I.A.1.b", "3)", "Spine (Cervical, Thoracic, Lumbar), Including CT and MRI"],
+  ["BASIC", "I.A.1.b.4", "I.A.1.b", "4)", "Neck (Including Doppler Ultrasound for Central Venous Access)"],
+  ["BASIC", "I.A.1.b.5", "I.A.1.b", "5)", "Abdominal wall"],
+  ["BASIC", "I.A.1.b.6", "I.A.1.b", "6)", "Extremities"],
+  ["BASIC", "I.A.1.c", "I.A.1", "c.", "Clinical Anatomy"],
+  ["BASIC", "I.A.1.c.1", "I.A.1.c", "1)", "Upper Extremity"],
+  ["BASIC", "I.A.1.c.1.a", "I.A.1.c.1", "a)", "Bones"],
+  ["BASIC", "I.A.1.c.1.b", "I.A.1.c.1", "b)", "Vasculature"],
+  ["BASIC", "I.A.1.c.1.c", "I.A.1.c.1", "c)", "Innervation"],
+  ["BASIC", "I.A.1.c.2", "I.A.1.c", "2)", "Lower Extremity"],
+  ["BASIC", "I.A.1.c.2.a", "I.A.1.c.2", "a)", "Bones"],
+  ["BASIC", "I.A.1.c.2.b", "I.A.1.c.2", "b)", "Vasculature"],
+  ["BASIC", "I.A.1.c.2.c", "I.A.1.c.2", "c)", "Innervation"],
+  ["BASIC", "I.A.1.c.3", "I.A.1.c", "3)", "Trunk"],
+  ["BASIC", "I.A.1.c.3.a", "I.A.1.c.3", "a)", "Intercostal"],
+  ["BASIC", "I.A.1.c.3.b", "I.A.1.c.3", "b)", "Abdominal Wall"],
+  ["BASIC", "I.A.2", "I.A", "2.", "Physics, Monitoring, and Anesthesia Delivery Devices"],
+  ["BASIC", "I.A.2.a", "I.A.2", "a.", "Mechanics"],
+  ["BASIC", "I.A.2.a.1", "I.A.2.a", "1)", "Pressure Measurement of Gases, Liquids"],
+  ["BASIC", "I.A.2.a.2", "I.A.2.a", "2)", "Transducers, Regulators, Medical Gas Cylinders"],
+  ["BASIC", "I.A.2.a.3", "I.A.2.a", "3)", "Principles of Ultrasound: Obtaining an Image, Resolution, Depth, Frequency, Resonance"],
+  ["BASIC", "I.A.2.b", "I.A.2", "b.", "Flow Velocity"],
+  ["BASIC", "I.A.2.b.1", "I.A.2.b", "1)", "Viscosity-Density, Laminar-Turbulent Flow"],
+  ["BASIC", "I.A.2.b.2", "I.A.2.b", "2)", "Flowmeters: Rotameter"],
+  ["BASIC", "I.A.2.b.3", "I.A.2.b", "3)", "Principles of Doppler Ultrasound"],
+  ["BASIC", "I.A.2.c", "I.A.2", "c.", "Properties of Liquids, Gases, and Vapors"],
+  ["BASIC", "I.A.2.c.1", "I.A.2.c", "1)", "Diffusion of Gases"],
+  ["BASIC", "I.A.2.c.2", "I.A.2.c", "2)", "Solubility Coefficients"],
+  ["BASIC", "I.A.2.c.3", "I.A.2.c", "3)", "Critical Temperature, Critical Pressure"],
+  ["BASIC", "I.A.2.d", "I.A.2", "d.", "Gas Laws"],
+  ["BASIC", "I.A.2.e", "I.A.2", "e.", "Vaporizers"],
+  ["BASIC", "I.A.2.e.1", "I.A.2.e", "1)", "Vapor Pressure and Calculation of Anesthetic Concentrations"],
+  ["BASIC", "I.A.2.e.2", "I.A.2.e", "2)", "Vaporizer Types and Safety Features"],
+  ["BASIC", "I.A.2.f", "I.A.2", "f.", "Uptake and Distribution of Inhalation Agents"],
+  ["BASIC", "I.A.2.f.1", "I.A.2.f", "1)", "Uptake and Elimination Curves; Effect of Ventilation, Circulation, Anesthetic Systems"],
+  ["BASIC", "I.A.2.f.2", "I.A.2.f", "2)", "Concentration Effect"],
+  ["BASIC", "I.A.2.f.3", "I.A.2.f", "3)", "Second Gas Effect"],
+  ["BASIC", "I.A.2.f.4", "I.A.2.f", "4)", "Nitrous Oxide and Closed Spaces"],
+  ["BASIC", "I.A.2.g", "I.A.2", "g.", "Physics of Anesthesia Machine/Breathing System"],
+  ["BASIC", "I.A.2.g.1", "I.A.2.g", "1)", "Principles: Resistance, Turbulent Flow, Mechanical Dead Space, Rebreathing, Dilution, Leaks, Gas Mixtures, Humidity, Heat"],
+  ["BASIC", "I.A.2.g.2", "I.A.2.g", "2)", "Components: Connectors, Adaptors, Mask, Endotracheal Tube, Reservoir Bag Unidirectional Valves, Corrugated Breathing Tubes, Laryngeal Mask Airways, Airway Pressure Relief Valve"],
+  ["BASIC", "I.A.2.g.3", "I.A.2.g", "3)", "Characteristics"],
+  ["BASIC", "I.A.2.g.3.a", "I.A.2.g.3", "a)", "Circle Systems: Closed and Semi-Closed"],
+  ["BASIC", "I.A.2.g.3.b", "I.A.2.g.3", "b)", "Non-Circle Systems: Insufflation, Open, Semi-Open"],
+  ["BASIC", "I.A.2.g.3.c", "I.A.2.g.3", "c)", "Portable Ventilation Devices (Self-Reinflating, Non-Self-Reinflating), Non-Rebreathing Valves"],
+  ["BASIC", "I.A.2.g.3.d", "I.A.2.g.3", "d)", "CO2 Absorption: Principles, Canisters, Efficiency"],
+  ["BASIC", "I.A.2.g.3.e", "I.A.2.g.3", "e)", "Toxicity: Compound A, Carbon Monoxide"],
+  ["BASIC", "I.A.2.g.4", "I.A.2.g", "4)", "Oxygen Supply Systems: FiO2"],
+  ["BASIC", "I.A.2.g.5", "I.A.2.g", "5)", "Waste Gas Evacuation Systems"],
+  ["BASIC", "I.A.2.g.6", "I.A.2.g", "6)", "Safety Features (Proportioning Devices, Rotameter Configuration, Pressure Fail-Safe)"],
+  ["BASIC", "I.A.2.h", "I.A.2", "h.", "Monitoring Methods"],
+  ["BASIC", "I.A.2.h.1", "I.A.2.h", "1)", "Neuromuscular Function: Nerve Stimulators, Electromyography (EMG)"],
+  ["BASIC", "I.A.2.h.2", "I.A.2.h", "2)", "Ventilation: Respirometers, Inspiratory Force, Spirometry, Flow-Volume Loops"],
+  ["BASIC", "I.A.2.h.3", "I.A.2.h", "3)", "Gas Concentrations: O2, CO2, Nitrogen, Anesthetic Gases and Vapors"],
+  ["BASIC", "I.A.2.h.4", "I.A.2.h", "4)", "Temperature"],
+  ["BASIC", "I.A.2.h.5", "I.A.2.h", "5)", "Oxygen: Oximetry, Co-Oximetry, Pulse Oximetry"],
+  ["BASIC", "I.A.2.h.6", "I.A.2.h", "6)", "Blood Pressure: Noninvasive, Invasive Doppler, Oscillometry, Korotkoff Sounds, Palpation"],
+  ["BASIC", "I.A.2.h.7", "I.A.2.h", "7)", "Heart Function: Heart Tones, Electrocardiogram, Echocardiogram"],
+  ["BASIC", "I.A.2.i", "I.A.2", "i.", "Instrumentation"],
+  ["BASIC", "I.A.2.i.1", "I.A.2.i", "1)", "Arterial and Venous Blood Gases: Electrodes for pH, PO2, PCO2, Calibration, Temperature Corrections, Errors"],
+  ["BASIC", "I.A.2.i.2", "I.A.2.i", "2)", "Gas Concentrations: Infrared Absorption, Mass Spectrometry, Raman Scatter Analysis"],
+  ["BASIC", "I.A.2.i.3", "I.A.2.i", "3)", "Pressure Transducers: Resonance, Damping"],
+  ["BASIC", "I.A.2.i.4", "I.A.2.i", "4)", "Neurologic Function Monitors"],
+  ["BASIC", "I.A.2.i.5", "I.A.2.i", "5)", "Fluid Warmers, Autotransfusion Devices"],
+  ["BASIC", "I.A.2.i.6", "I.A.2.i", "6)", "Body Warming Devices: Forced Air, Heating Lamps, Insulati on on Devices, Warming Blankets, Water-Flow “Second Skin” Devices"],
+  ["BASIC", "I.A.2.j", "I.A.2", "j.", "Ventilators"],
+  ["BASIC", "I.A.2.j.1", "I.A.2.j", "1)", "Classifications: Flow Generation vs. Pressure Generation"],
+  ["BASIC", "I.A.2.j.2", "I.A.2.j", "2)", "Principles of Action: Assistors, Controllers, Assist-Control; Pressure-Limited, Volume- Limited; FiO2 Control; Periodic Sigh, Inverse Ratio, High Frequency Ventilation, Intermittent Mandatory Ventilation (IMV), Synchronized IMV, Pressure Support, Airway Pressure Release Ventilation (APRV), Non-Invasive Techniques: Biphasic Positive Airway Pressure (BIPAP), Continuous Positive Airway Pressure (CPAP), Others"],
+  ["BASIC", "I.A.2.j.3", "I.A.2.j", "3)", "Monitors; Pressure (Plateau, Peak), Oxygen, Apnea, Inspiratory/Expiratory Ratio, Dynamic Compliance, Static Compliance"],
+  ["BASIC", "I.A.2.k", "I.A.2", "k.", "Alarms and Safety Features: Operating Room, Electrical, Anesthesia Machine, Ventilators, Capnometer, Oxygen, Hemodynamic Monitors"],
+  ["BASIC", "I.A.2.l", "I.A.2", "l.", "Defibrillators: Automatic Internal, External, Implantable; Energy, Cardioversion, Types of Waveforms (Monophasic, Biphasic); Paddle Size and Position; Automated External Defibrillators (AEDs)"],
+  ["BASIC", "I.A.2.m", "I.A.2", "m.", "Electrical; Fire and Explosion Hazards; Basic Electronics"],
+  ["BASIC", "I.A.2.m.1", "I.A.2.m", "1)", "Source of Ignition; Static"],
+  ["BASIC", "I.A.2.m.2", "I.A.2.m", "2)", "Prevention: Grounding, Isolation Transformers"],
+  ["BASIC", "I.A.2.m.3", "I.A.2.m", "3)", "Macro and Micro Current Hazards"],
+  ["BASIC", "I.A.2.m.4", "I.A.2.m", "4)", "Safety Regulations; National Fire Protection Association (NFPA) Standards"],
+  ["BASIC", "I.A.2.m.5", "I.A.2.m", "5)", "Risk Factors for Intraoperative Fire"],
+  ["BASIC", "I.A.2.n", "I.A.2", "n.", "IV Pumps and Infusers"],
+  ["BASIC", "I.A.3", "I.A", "3.", "Mathematics"],
+  ["BASIC", "I.A.3.a", "I.A.3", "a.", "Simple Math: Logarithms, Logarithmic Transformation; Graph of Simple Equations; Exponential Function, Analysis of Biologic Curves"],
+  ["BASIC", "I.A.3.b", "I.A.3", "b.", "Statistics: Sample and Population; Probability; Mean, Median, and Mode; Standard Deviation and Error; T-Test; Chi-Square; Regression Analysis/Correlation; Analysis of Variance, Power Analysis, Meta-Analysis, Confidence Intervals, Odds Ratio, Risk Ratio, Bland-Altman Plot Evaluation, Poisson Distribution"],
+  ["BASIC", "I.A.4", "I.A", "4.", "Pharmacology"],
+  ["BASIC", "I.A.4.a", "I.A.4", "a.", "General Concepts"],
+  ["BASIC", "I.A.4.a.1", "I.A.4.a", "1)", "Pharmacokinetics and Pharmacodynamics, Protein Binding; Partition Coefficients; PKA; Ionization; Tissue Uptake; Compartmentalization and Exponential Models"],
+  ["BASIC", "I.A.4.a.1.a", "I.A.4.a.1", "a)", "Pharmacokinetics of Neuraxial Drug Administration: Epidural and Subarachnoid"],
+  ["BASIC", "I.A.4.a.1.b", "I.A.4.a.1", "b)", "Tolerance and Tachyphylaxis"],
+  ["BASIC", "I.A.4.a.2", "I.A.4.a", "2)", "Termination of Action"],
+  ["BASIC", "I.A.4.a.2.a", "I.A.4.a.2", "a)", "Elimination; Biotransformation; Context-Sensitive Half-Time"],
+  ["BASIC", "I.A.4.a.2.b", "I.A.4.a.2", "b)", "Impact of Renal Disease"],
+  ["BASIC", "I.A.4.a.2.c", "I.A.4.a.2", "c)", "Impact of Hepatic Disease"],
+  ["BASIC", "I.A.4.a.3", "I.A.4.a", "3)", "Drug Interactions"],
+  ["BASIC", "I.A.4.a.3.a", "I.A.4.a.3", "a)", "Enzyme Induction and Inhibition"],
+  ["BASIC", "I.A.4.a.3.b", "I.A.4.a.3", "b)", "Hepatic Blood Flow"],
+  ["BASIC", "I.A.4.a.3.c", "I.A.4.a.3", "c)", "Drug-Drug Binding"],
+  ["BASIC", "I.A.4.a.3.d", "I.A.4.a.3", "d)", "Alternative and Herbal Medicines: Perioperative Implications"],
+  ["BASIC", "I.A.4.a.4", "I.A.4.a", "4)", "Drug Reactions (Anaphylaxis, Idiosyncratic)"],
+  ["BASIC", "I.A.4.b", "I.A.4", "b.", "Anesthetics-Gases and Vapors"],
+  ["BASIC", "I.A.4.b.1", "I.A.4.b", "1)", "Physical Properties"],
+  ["BASIC", "I.A.4.b.2", "I.A.4.b", "2)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.b.3", "I.A.4.b", "3)", "Effects on CNS"],
+  ["BASIC", "I.A.4.b.4", "I.A.4.b", "4)", "Effects on Cardiovascular System"],
+  ["BASIC", "I.A.4.b.5", "I.A.4.b", "5)", "Effects on Respiration"],
+  ["BASIC", "I.A.4.b.6", "I.A.4.b", "6)", "Effects on Neuromuscular Function"],
+  ["BASIC", "I.A.4.b.7", "I.A.4.b", "7)", "Effects on Renal Function"],
+  ["BASIC", "I.A.4.b.8", "I.A.4.b", "8)", "Effects on Hepatic Function"],
+  ["BASIC", "I.A.4.b.9", "I.A.4.b", "9)", "Effects on Hematologic and Immune Systems"],
+  ["BASIC", "I.A.4.b.10", "I.A.4.b", "10)", "Biotransformation and Toxicity"],
+  ["BASIC", "I.A.4.b.11", "I.A.4.b", "11)", "Minimum Alveolar Concentration (MAC), Factors Affecting MAC"],
+  ["BASIC", "I.A.4.b.12", "I.A.4.b", "12)", "Trace Concentrations, OR Pollution, Personnel Hazards"],
+  ["BASIC", "I.A.4.b.13", "I.A.4.b", "13)", "Comparative Pharmacodynamics"],
+  ["BASIC", "I.A.4.b.14", "I.A.4.b", "14)", "Environmental implications of anesthetic gases"],
+  ["BASIC", "I.A.4.c", "I.A.4", "c.", "Anesthetics-IV (Opioid and Non-Opioid Induction and Anesthetic Agents)"],
+  ["BASIC", "I.A.4.c.1", "I.A.4.c", "1)", "Opioids"],
+  ["BASIC", "I.A.4.c.1.a", "I.A.4.c.1", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.1.b", "I.A.4.c.1", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.1.b.1", "I.A.4.c.1.b", "(1)", "IV"],
+  ["BASIC", "I.A.4.c.1.b.2", "I.A.4.c.1.b", "(2)", "Epidural and Intrathecal"],
+  ["BASIC", "I.A.4.c.1.c", "I.A.4.c.1", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.1.d", "I.A.4.c.1", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.1.e", "I.A.4.c.1", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.1.f", "I.A.4.c.1", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.1.g", "I.A.4.c.1", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.1.h", "I.A.4.c.1", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.c.1.i", "I.A.4.c.1", "i)", "Antagonism"],
+  ["BASIC", "I.A.4.c.2", "I.A.4.c", "2)", "Barbiturates"],
+  ["BASIC", "I.A.4.c.2.a", "I.A.4.c.2", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.2.b", "I.A.4.c.2", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.2.c", "I.A.4.c.2", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.2.d", "I.A.4.c.2", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.2.e", "I.A.4.c.2", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.2.f", "I.A.4.c.2", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.2.g", "I.A.4.c.2", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.2.h", "I.A.4.c.2", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.c.3", "I.A.4.c", "3)", "Propofol"],
+  ["BASIC", "I.A.4.c.3.a", "I.A.4.c.3", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.3.b", "I.A.4.c.3", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.3.c", "I.A.4.c.3", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.3.d", "I.A.4.c.3", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.3.e", "I.A.4.c.3", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.3.f", "I.A.4.c.3", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.3.g", "I.A.4.c.3", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.3.h", "I.A.4.c.3", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.c.4", "I.A.4.c", "4)", "Etomidate"],
+  ["BASIC", "I.A.4.c.4.a", "I.A.4.c.4", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.4.b", "I.A.4.c.4", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.4.c", "I.A.4.c.4", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.4.d", "I.A.4.c.4", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.4.e", "I.A.4.c.4", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.4.f", "I.A.4.c.4", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.4.g", "I.A.4.c.4", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.4.h", "I.A.4.c.4", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.c.5", "I.A.4.c", "5)", "Benzodiazepines"],
+  ["BASIC", "I.A.4.c.5.a", "I.A.4.c.5", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.5.b", "I.A.4.c.5", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.5.c", "I.A.4.c.5", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.5.d", "I.A.4.c.5", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.5.e", "I.A.4.c.5", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.5.f", "I.A.4.c.5", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.5.g", "I.A.4.c.5", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.5.h", "I.A.4.c.5", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.c.5.i", "I.A.4.c.5", "i)", "Antagonism"],
+  ["BASIC", "I.A.4.c.6", "I.A.4.c", "6)", "Ketamine"],
+  ["BASIC", "I.A.4.c.6.a", "I.A.4.c.6", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.6.b", "I.A.4.c.6", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.6.c", "I.A.4.c.6", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.6.d", "I.A.4.c.6", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.6.e", "I.A.4.c.6", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.6.f", "I.A.4.c.6", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.6.g", "I.A.4.c.6", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.6.h", "I.A.4.c.6", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.c.7", "I.A.4.c", "7)", "Dexmedetomidine"],
+  ["BASIC", "I.A.4.c.7.a", "I.A.4.c.7", "a)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.c.7.b", "I.A.4.c.7", "b)", "Pharmacokinetics and Pharmacodynamics"],
+  ["BASIC", "I.A.4.c.7.c", "I.A.4.c.7", "c)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.c.7.d", "I.A.4.c.7", "d)", "Effect on Circulation"],
+  ["BASIC", "I.A.4.c.7.e", "I.A.4.c.7", "e)", "Effect on Respiration"],
+  ["BASIC", "I.A.4.c.7.f", "I.A.4.c.7", "f)", "Effect on Other Organs"],
+  ["BASIC", "I.A.4.c.7.g", "I.A.4.c.7", "g)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.c.7.h", "I.A.4.c.7", "h)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.d", "I.A.4", "d.", "Anesthetics: Local"],
+  ["BASIC", "I.A.4.d.1", "I.A.4.d", "1)", "Uptake, Mechanism of Action"],
+  ["BASIC", "I.A.4.d.2", "I.A.4.d", "2)", "Biotransformation and Excretion"],
+  ["BASIC", "I.A.4.d.3", "I.A.4.d", "3)", "Comparison of Drugs and Chemical Groups"],
+  ["BASIC", "I.A.4.d.4", "I.A.4.d", "4)", "Prolongation of Action"],
+  ["BASIC", "I.A.4.d.5", "I.A.4.d", "5)", "Local Anesthetic Side Effects"],
+  ["BASIC", "I.A.4.d.5.a", "I.A.4.d.5", "a)", "CNS: Seizures, Cauda Equina Syndrome, Transient Neurological Symptom"],
+  ["BASIC", "I.A.4.d.5.b", "I.A.4.d.5", "b)", "Cardiac"],
+  ["BASIC", "I.A.4.d.5.c", "I.A.4.d.5", "c)", "Allergy"],
+  ["BASIC", "I.A.4.d.5.d", "I.A.4.d.5", "d)", "Preservatives/Additives"],
+  ["BASIC", "I.A.4.d.5.e", "I.A.4.d.5", "e)", "Methemoglobinemia"],
+  ["BASIC", "I.A.4.d.5.f", "I.A.4.d.5", "f)", "LAST"],
+  ["BASIC", "I.A.4.d.5.f.i", "I.A.4.d.5.f", "(i)", "American Society for Regional Anesthesia Checklist for LAST"],
+  ["BASIC", "I.A.4.d.5.f.ii", "I.A.4.d.5.f", "(ii)", "IV Lipid Emulsion for LAST"],
+  ["BASIC", "I.A.4.e", "I.A.4", "e.", "Muscle Relaxants (Depolarizing, Non-Depolarizing)"],
+  ["BASIC", "I.A.4.e.1", "I.A.4.e", "1)", "Mechanism of Action"],
+  ["BASIC", "I.A.4.e.2", "I.A.4.e", "2)", "Pharmacokinetics and Pharmacodynamics, Abnormal Responses"],
+  ["BASIC", "I.A.4.e.3", "I.A.4.e", "3)", "Prolongation of Action; Synergism"],
+  ["BASIC", "I.A.4.e.4", "I.A.4.e", "4)", "Metabolism and Excretion"],
+  ["BASIC", "I.A.4.e.5", "I.A.4.e", "5)", "Side Effects and Toxicity"],
+  ["BASIC", "I.A.4.e.6", "I.A.4.e", "6)", "Indications and Contraindications"],
+  ["BASIC", "I.A.4.e.7", "I.A.4.e", "7)", "Antagonism of Blockade"],
+  ["BASIC", "I.A.4.e.8", "I.A.4.e", "8)", "Drug Interactions (Antibiotics, Antiepileptics, Lithium, Magnesium, Inhalational Anesthetics)"],
+  ["BASIC", "I.B", null, "B.", "Clinical Sciences: Anesthesia Procedures, Methods, and Techniques"],
+  ["BASIC", "I.B.1", "I.B", "1.", "Evaluation of the Patient and Preoperative Preparation"],
+  ["BASIC", "I.B.1.a", "I.B.1", "a.", "Physical Examination Including Airway Evaluation"],
+  ["BASIC", "I.B.1.b", "I.B.1", "b.", "Laboratory Evaluation"],
+  ["BASIC", "I.B.1.b.1", "I.B.1.b", "1)", "American Society of Anesthesiologists (ASA) Preoperative Testing Guidelines"],
+  ["BASIC", "I.B.1.b.2", "I.B.1.b", "2)", "American College of Cardiology/American Heart Association Guidelines for Perioperative Cardiovascular Evaluation"],
+  ["BASIC", "I.B.1.c", "I.B.1", "c.", "ASA Physical Status Classification"],
+  ["BASIC", "I.B.1.d", "I.B.1", "d.", "Preparation for Anesthesia/Premedication"],
+  ["BASIC", "I.B.1.d.1", "I.B.1.d", "1)", "Interaction with Chronic Drug Therapy; Interaction with Anesthetic Agents"],
+  ["BASIC", "I.B.1.d.2", "I.B.1.d", "2)", "Adverse Reactions to Premedications; Patient Variability, Dose Response Curves, Side Effects"],
+  ["BASIC", "I.B.1.d.3", "I.B.1.d", "3)", "Specific Problems in Disease States: Hyperthyroidism and Hypothyroidism, Drug Abuse, Glaucoma, Uremia, Increased CSF Pressure, Chronic Steroid Ingestion, Obesity, Obstructive Sleep Apnea, Depression, COPD, Hypertension, Cardiovascular disease, malignancy"],
+  ["BASIC", "I.B.1.d.4", "I.B.1.d", "4)", "Geriatric Doses"],
+  ["BASIC", "I.B.1.d.5", "I.B.1.d", "5)", "Role in Patients with Allergies"],
+  ["BASIC", "I.B.1.d.6", "I.B.1.d", "6)", "NPO and Full Stomach Status; Implications for Airway Management, Choice of Anesthesia Technique and Induction of Anesthesia; Gastric Emptying Time; Preoperative; Full Stomach and Induction of Anesthesia; Practice Guidelines for Preoperative Fasting"],
+  ["BASIC", "I.B.1.d.6.a", "I.B.1.d.6", "a)", "Alteration of Gastric Fluid Volume and pH, Sphincter Tone"],
+  ["BASIC", "I.B.1.d.7", "I.B.1.d", "7)", "Continuation vs. Discontinuation of Chronic Medications: Antihypertensives, Anti-Anginal, Antihyperglycemics, Antidepressants, Platelet Inhibitors, etc."],
+  ["BASIC", "I.B.1.d.8", "I.B.1.d", "8)", "Prophylactic Cardiac Risk Reduction: Beta-Adrenergic Blockers, etc."],
+  ["BASIC", "I.B.1.d.9", "I.B.1.d", "9)", "Prophylactic Antibiotics"],
+  ["BASIC", "I.B.1.d.9.a", "I.B.1.d.9", "a)", "Indications"],
+  ["BASIC", "I.B.1.d.9.b", "I.B.1.d.9", "b)", "Risks of Administration"],
+  ["BASIC", "I.B.1.d.9.c", "I.B.1.d.9", "c)", "Drug Interactions"],
+  ["BASIC", "I.B.1.d.10", "I.B.1.d", "10)", "Oral Anticoagulants, Anti-platelet Agents, and Reversal Agents"],
+  ["BASIC", "I.B.2", "I.B", "2.", "Regional Anesthesia"],
+  ["BASIC", "I.B.2.a", "I.B.2", "a.", "General Topics: Premedication, Patient Position, Equipment, Monitoring and Sedation"],
+  ["BASIC", "I.B.2.b", "I.B.2", "b.", "Spinal, Epidural, Caudal, Combined Spinal/Epidural"],
+  ["BASIC", "I.B.2.b.1", "I.B.2.b", "1)", "Indications, Contraindications"],
+  ["BASIC", "I.B.2.b.2", "I.B.2.b", "2)", "Sites of Actions"],
+  ["BASIC", "I.B.2.b.3", "I.B.2.b", "3)", "Factors Influencing Onset, Duration, and Termination of Action"],
+  ["BASIC", "I.B.2.b.4", "I.B.2.b", "4)", "Systemic Toxicity, Test Dose"],
+  ["BASIC", "I.B.2.b.5", "I.B.2.b", "5)", "Complications; Precipitating Factors, Prevention, Therapy, Implications of Anticoagulants and Platelet Inhibitors: American Society of Regional Anesthesia and Pain Medicine (ASRA) Guidelines"],
+  ["BASIC", "I.B.2.b.6", "I.B.2.b", "6)", "Physiologic Effects (GI, Pulmonary, Cardiac, Renal)"],
+  ["BASIC", "I.B.2.c", "I.B.2", "c.", "IV Regional: Mechanism, Agents, Indications, Contraindications, Techniques, Complications"],
+  ["BASIC", "I.B.2.d", "I.B.2", "d.", "Transversus Abdominis Plane Blo cks: Indications, Risks, Side E ffects"],
+  ["BASIC", "I.B.3", "I.B", "3.", "General Anesthesia"],
+  ["BASIC", "I.B.3.a", "I.B.3", "a.", "Stages and Signs of Anesthesia; Awareness under Anesthesia"],
+  ["BASIC", "I.B.3.b", "I.B.3", "b.", "Techniques: Inhalational, Total IV, Combined Inhalational/ IV"],
+  ["BASIC", "I.B.3.c", "I.B.3", "c.", "Airway Management"],
+  ["BASIC", "I.B.3.c.1", "I.B.3.c", "1)", "Assessment/Identification of Difficult Airway: Anatomic Correlates, Mallampati Classification, Range of Motion"],
+  ["BASIC", "I.B.3.c.2", "I.B.3.c", "2)", "Techniques for Managing Airway: Awake vs. Asleep, Use vs. Avoidance of Muscle Relaxants, Drug Selection, Retrograde Intubation Techniques, A SA Difficult Airway Algorithm"],
+  ["BASIC", "I.B.3.c.3", "I.B.3.c", "3)", "Devices: Flexible Fiberoptic, Rigid Fiberoptic, Transillumination, Laryngoscope Blades, Alternative Intubating Devices, Video Laryngoscopes"],
+  ["BASIC", "I.B.3.c.4", "I.B.3.c", "4)", "Alternatives and Adjuncts: Laryngeal Mask Airway (Traditional and Modified), Esophageal Obturator Airways, Occlusive Pharyngeal Airways"],
+  ["BASIC", "I.B.3.c.5", "I.B.3.c", "5)", "Transcutaneous or Surgical Airway: Tracheostomy, Cricothyroidotomy, Translaryngeal or Transtracheal Jet Ventilation"],
+  ["BASIC", "I.B.3.c.6", "I.B.3.c", "6)", "Endobronchial Intubation: Double-Lumen Endobronchial Tubes; Bronchial Blockers, Placement and Positioning Considerations, Postoperative Considerations"],
+  ["BASIC", "I.B.3.c.7", "I.B.3.c", "7)", "Intubation and Tube Change Adjuncts: Bougies, Jet Stylettes, Soft and Rigid Tube Change Devices; Complications"],
+  ["BASIC", "I.B.3.c.8", "I.B.3.c", "8)", "Endotracheal Tube Types: Tube Material (Polyvinyl Chloride, Silicone, Laser-Resistant, Silver Impregnated, Other), Tube Tip Design (Murphy Eyes, Flexible Tip, Moveable Tip, Short-Bevel), Cuff Design (High vs. Low Volume/Pressure, Cuffed vs. Uncuffed, Cuff Shape), Cuff Pressure Management (Lanz Valves, Active Management, Pilot Balloon, Inflation Valve), Specific Tube Types (Wire-Reinforced, Nasal and Oral Rae®, Microlaryngeal, Supraglottic Secretion Suctioning, Other), Microlaryngoscopy; Laser Safe"],
+  ["BASIC", "I.B.3.d", "I.B.3", "d.", "ASA Monitoring Standards"],
+  ["BASIC", "I.B.4", "I.B", "4.", "Monitore d Anesthesia Care and Sedation"],
+  ["BASIC", "I.B.4.a", "I.B.4", "a.", "Techniques"],
+  ["BASIC", "I.B.4.b", "I.B.4", "b.", "Risks and Complications"],
+  ["BASIC", "I.B.4.c", "I.B.4", "c.", "ASA Guidelines for Sedation, Sedation Guidelines for Non-Anesthesiologists"],
+  ["BASIC", "I.B.4.d", "I.B.4", "d.", "Indications/Contraindications"],
+  ["BASIC", "I.B.5", "I.B", "5.", "IV Fluid Therapy during Anesthesia"],
+  ["BASIC", "I.B.5.a", "I.B.5", "a.", "Water, Electrolyte, Glucose Requirements and Disposition"],
+  ["BASIC", "I.B.5.b", "I.B.5", "b.", "Crystalloid vs. Colloid"],
+  ["BASIC", "I.B.5.c", "I.B.5", "c.", "Fluid Requirements and Fluid Deficit Calculations"],
+  ["BASIC", "I.B.5.d", "I.B.5", "d.", "Normal Saline vs. Lactated Ringer’s vs. Plasma-Lyte vs. D5W"],
+  ["BASIC", "I.B.5.e", "I.B.5", "e.", "Fluid Management and Patient Outcomes"],
+  ["BASIC", "I.B.6", "I.B", "6.", "Common Complications"],
+  ["BASIC", "I.B.6.a", "I.B.6", "a.", "Trauma"],
+  ["BASIC", "I.B.6.a.1", "I.B.6.a", "1)", "Upper Airway, Epistaxis"],
+  ["BASIC", "I.B.6.a.2", "I.B.6.a", "2)", "Larynx, Trachea, and Esophagus"],
+  ["BASIC", "I.B.6.a.3", "I.B.6.a", "3)", "Eyes: Corneal Abrasions, Blindness, Post operative Visual Loss"],
+  ["BASIC", "I.B.6.a.4", "I.B.6.a", "4)", "Vascular; Arterial and Venous Thrombosis; Thrombophlebitis; Sheared Catheter, Intra - Arterial Injections, Air Embolism, Cardiac/Vascular Perforations, Pulmonary Artery Rupture"],
+  ["BASIC", "I.B.6.a.5", "I.B.6.a", "5)", "Neurological: Pressure Injuries of Mask, Tourniquet, Body Position, Intraneural Injections, Retractors, Peripheral Neuropathies"],
+  ["BASIC", "I.B.6.a.6", "I.B.6.a", "6)", "Burns"],
+  ["BASIC", "I.B.6.b", "I.B.6", "b.", "Chronic Environmental Exposure and Scavenging"],
+  ["BASIC", "I.B.6.c", "I.B.6", "c.", "Temperature"],
+  ["BASIC", "I.B.6.c.1", "I.B.6.c", "1)", "Hypothermia: Etiology, Prevention, Treatment, Complications (Shivering, O 2 Consumption), Prognosis"],
+  ["BASIC", "I.B.6.c.2", "I.B.6.c", "2)", "Nonmalignant Hyperthermia; Complications, Treatment"],
+  ["BASIC", "I.B.6.d", "I.B.6", "d.", "Bronchospasm"],
+  ["BASIC", "I.B.6.e", "I.B.6", "e.", "Latex Allergy"],
+  ["BASIC", "I.B.6.f", "I.B.6", "f.", "Laryngospasm"],
+  ["BASIC", "I.B.6.g", "I.B.6", "g.", "Postobstructive Pulmonary Edema"],
+  ["BASIC", "I.B.6.h", "I.B.6", "h.", "Aspiration of Gastric Contents"],
+  ["BASIC", "I.B.6.i", "I.B.6", "i.", "Malignant Hyperthermia"],
+  ["BASIC", "I.B.6.i.1", "I.B.6.i", "1)", "Genetics"],
+  ["BASIC", "I.B.6.i.2", "I.B.6.i", "2)", "Pathophysiology"],
+  ["BASIC", "I.B.7", "I.B", "7.", "Postoperative Care"],
+  ["BASIC", "I.B.7.a", "I.B.7", "a.", "Pain Relief"],
+  ["BASIC", "I.B.7.a.1", "I.B.7.a", "1)", "Pharmacologic"],
+  ["BASIC", "I.B.7.a.1.a", "I.B.7.a.1", "a)", "Drugs: Opioids, Agonist-Antagonists, Local Anesthetics, Alpha-2 Agonists, Nonsteroidal Anti-Inflammatory Drugs (NSAIDs), N-Methyl-D-Aspartate (NMDA) Receptor Blockers, Tricyclic Antidepressants (TCA), Selective Serotonin Reuptake Inhibitor (SSRI)"],
+  ["BASIC", "I.B.7.a.1.b", "I.B.7.a.1", "b)", "Routes: Oral, Subcutaneous (SC), Transcutaneous, Transmucosal, Intramuscular (IM), IV, Including Patient-Controlled Analgesia (PCA), Epidural, Spinal, Interpleural, Other Regional Techniques"],
+  ["BASIC", "I.B.7.a.2", "I.B.7.a", "2)", "Other Techniques; Transcutaneous Electrical Nerve Stimulation (TENS); Cryotherapy; Acupuncture, Hypnosis"],
+  ["BASIC", "I.B.7.b", "I.B.7", "b.", "Respiratory Consequences of Anesthesia and of Surgical Incisions"],
+  ["BASIC", "I.B.7.c", "I.B.7", "c.", "Cardiovascular Consequences of General and Regional Anesthesia: Differential Diagnosis and Treatment of Postoperative Hypertension and Hypotension"],
+  ["BASIC", "I.B.7.d", "I.B.7", "d.", "Nausea and Vomiting"],
+  ["BASIC", "I.B.7.d.1", "I.B.7.d", "1)", "Physiology; Etiology; Risk Factors, Preventive Strategies"],
+  ["BASIC", "I.B.7.d.2", "I.B.7.d", "2)", "Pharmacology and Use of Antacids, Histamine-2 (H2) Blockers, Metoclopramide, Transdermal Scopolamine, Droperidol, Serotonin Antagonists, Proton Pump Inhibitors, Dexamethasone, Multimodal Therapy, Acupressure/Acupuncture"],
+  ["BASIC", "I.B.7.e", "I.B.7", "e.", "Neuromuscular Consequences: Residual Paralysis, Muscle Soreness, Recovery of Airway Reflexes"],
+  ["BASIC", "I.B.7.f", "I.B.7", "f.", "Neurologic Consequences of Anesthesia: Confusion, Delirium, Cognitive Dysfunction, Failure to Emerge from Anesthesia"],
+  ["BASIC", "I.C", null, "C.", "Organ-Based Basic and Clinical Sciences"],
+  ["BASIC", "I.C.1", "I.C", "1.", "Central and Peripheral Nervous Systems"],
+  ["BASIC", "I.C.1.a", "I.C.1", "a.", "Physiology"],
+  ["BASIC", "I.C.1.a.1", "I.C.1.a", "1)", "Brain"],
+  ["BASIC", "I.C.1.a.1.a", "I.C.1.a.1", "a)", "Cerebral Cortex; Functional Organization"],
+  ["BASIC", "I.C.1.a.1.b", "I.C.1.a.1", "b)", "Subcortical Areas: Basal Ganglia, Hippocampus, Internal Capsule, Cerebellum, Brain Stem, Reticular Activating System"],
+  ["BASIC", "I.C.1.a.1.c", "I.C.1.a.1", "c)", "Cerebral Blood Flow"],
+  ["BASIC", "I.C.1.a.1.c.1", "I.C.1.a.1.c", "(1)", "Effect of Perfusion Pressure, Ph, PaCO 2, PaO2, and Cerebral Metabolic Rate for O2 (CMRO2); Inverse Steal; Gray vs. White Matter"],
+  ["BASIC", "I.C.1.a.1.c.2", "I.C.1.a.1.c", "(2)", "Autoregulation: Normal, Altered, and Abolished"],
+  ["BASIC", "I.C.1.a.1.c.3", "I.C.1.a.1.c", "(3)", "Pathophysiology of Ischemia/Hypoxia: Global vs. Focal, Glucose Effects, Effects of Brain Trauma or Tumors"],
+  ["BASIC", "I.C.1.a.1.d", "I.C.1.a.1", "d)", "Cerebrospinal Fluid"],
+  ["BASIC", "I.C.1.a.1.d.1", "I.C.1.a.1.d", "(1)", "Formation, Volume, Composition, Flow and Pressure"],
+  ["BASIC", "I.C.1.a.1.d.2", "I.C.1.a.1.d", "(2)", "Blood-Brain Barrier, Active and Passive Molecular Transport Across, Causes of Disruption"],
+  ["BASIC", "I.C.1.a.1.d.3", "I.C.1.a.1.d", "(3)", "Relation to Blood Chemistry and Acid-Base Balance"],
+  ["BASIC", "I.C.1.a.2", "I.C.1.a", "2)", "Spinal Cord"],
+  ["BASIC", "I.C.1.a.2.a", "I.C.1.a.2", "a)", "General Organization"],
+  ["BASIC", "I.C.1.a.2.b", "I.C.1.a.2", "b)", "Spinal Reflexes"],
+  ["BASIC", "I.C.1.a.2.c", "I.C.1.a.2", "c)", "Spinal Cord Tracts"],
+  ["BASIC", "I.C.1.a.2.d", "I.C.1.a.2", "d)", "Evoked Potentials"],
+  ["BASIC", "I.C.1.a.3", "I.C.1.a", "3)", "Neuromuscular and Synaptic Transmission"],
+  ["BASIC", "I.C.1.a.3.a", "I.C.1.a.3", "a)", "Morphology; Receptors, Receptor Density"],
+  ["BASIC", "I.C.1.a.3.b", "I.C.1.a.3", "b)", "Membrane Potential; Mechanism"],
+  ["BASIC", "I.C.1.a.3.c", "I.C.1.a.3", "c)", "Action Potential; Characteristics, Ion Flux"],
+  ["BASIC", "I.C.1.a.3.d", "I.C.1.a.3", "d)", "Synapse; Transmitters, Precursors, Ions, Termination of Action, Transmission Characteristics, Presynaptic and Postsynaptic Functions"],
+  ["BASIC", "I.C.1.a.4", "I.C.1.a", "4)", "Skeletal Muscle Contractions; Depolarization, Role of Calcium, Actin/Myosin; Energy Source and Release"],
+  ["BASIC", "I.C.1.a.5", "I.C.1.a", "5)", "Pain Mechanisms and Pathways"],
+  ["BASIC", "I.C.1.a.5.a", "I.C.1.a.5", "a)", "Nociceptors and Nociceptive Afferent Neurons, Wind-Up Phenomenon"],
+  ["BASIC", "I.C.1.a.5.b", "I.C.1.a.5", "b)", "Dorsal Horn Transmission and Modulation"],
+  ["BASIC", "I.C.1.a.5.c", "I.C.1.a.5", "c)", "Spinal and Supraspinal Neurotransmission and Modulation; Opioid Receptors"],
+  ["BASIC", "I.C.1.a.5.d", "I.C.1.a.5", "d)", "Autonomic Contributions to Pain; Visceral Pain Perception and Transmission"],
+  ["BASIC", "I.C.1.a.5.e", "I.C.1.a.5", "e)", "Social, Vocational and Psychological Influences on Pain Perception"],
+  ["BASIC", "I.C.1.a.5.f", "I.C.1.a.5", "f)", "Gender and Age Differences in Pain Perception"],
+  ["BASIC", "I.C.1.a.6", "I.C.1.a", "6)", "Autonomic Nervous System"],
+  ["BASIC", "I.C.1.a.6.a", "I.C.1.a.6", "a)", "Sympathetic: Receptors; Transmitters, Synthesis; Storage; Release; Responses; Termination of Action"],
+  ["BASIC", "I.C.1.a.6.b", "I.C.1.a.6", "b)", "Parasympathetic: Receptors; Transmitters; Synthesis; Release; Responses; Termination of Action"],
+  ["BASIC", "I.C.1.a.6.c", "I.C.1.a.6", "c)", "Ganglionic Transmission"],
+  ["BASIC", "I.C.1.a.6.d", "I.C.1.a.6", "d)", "Reflexes: Afferent and Efferent Limbs"],
+  ["BASIC", "I.C.1.a.7", "I.C.1.a", "7)", "Temperature Regulation"],
+  ["BASIC", "I.C.1.a.7.a", "I.C.1.a.7", "a)", "Temperature Sensing; Central, Peripheral"],
+  ["BASIC", "I.C.1.a.7.b", "I.C.1.a.7", "b)", "Temperature Regulating Centers; Concept of Set Point"],
+  ["BASIC", "I.C.1.a.7.c", "I.C.1.a.7", "c)", "Heat Production and Conservation"],
+  ["BASIC", "I.C.1.a.7.d", "I.C.1.a.7", "d)", "Heat Loss; Mechanisms"],
+  ["BASIC", "I.C.1.a.7.e", "I.C.1.a.7", "e)", "Body Temperature Measurement; Sites; Gradients"],
+  ["BASIC", "I.C.1.a.7.f", "I.C.1.a.7", "f)", "Effect of Drugs/Anesthe tic Technique on Temperature Regulation"],
+  ["BASIC", "I.C.1.b", "I.C.1", "b.", "Anatomy"],
+  ["BASIC", "I.C.1.b.1", "I.C.1.b", "1)", "Brain"],
+  ["BASIC", "I.C.1.b.1.a", "I.C.1.b.1", "a)", "Cerebral Cortex"],
+  ["BASIC", "I.C.1.b.1.a.1", "I.C.1.b.1.a", "(1)", "Cerebellum, Basal Ganglia, Major Nuclei and Pathways"],
+  ["BASIC", "I.C.1.b.1.a.2", "I.C.1.b.1.a", "(2)", "Brain Stem"],
+  ["BASIC", "I.C.1.b.1.a.2.a", "I.C.1.b.1.a.2", "(a)", "Respiratory Centers"],
+  ["BASIC", "I.C.1.b.1.a.2.b", "I.C.1.b.1.a.2", "(b)", "Reticular Activating System"],
+  ["BASIC", "I.C.1.b.1.a.3", "I.C.1.b.1.a", "(3)", "Cerebral Circulation; Circle of Willis, Venous Sinuses and Drainage"],
+  ["BASIC", "I.C.1.b.2", "I.C.1.b", "2)", "Spinal Cord and Spine"],
+  ["BASIC", "I.C.1.b.2.a", "I.C.1.b.2", "a)", "Variations in Vertebral Configuration"],
+  ["BASIC", "I.C.1.b.2.b", "I.C.1.b.2", "b)", "Spinal Nerves (Level of Exit, Covering, Sensory Distribution)"],
+  ["BASIC", "I.C.1.b.2.c", "I.C.1.b.2", "c)", "Blood Supply"],
+  ["BASIC", "I.C.1.b.2.d", "I.C.1.b.2", "d)", "Sacral Nerves: Innervation of Pelvic Structures"],
+  ["BASIC", "I.C.1.b.3", "I.C.1.b", "3)", "Meninges: Epidural, Subdural and Subarachnoid Spaces"],
+  ["BASIC", "I.C.1.b.4", "I.C.1.b", "4)", "Parasympathetic Nervous System: Location of Ganglia, Vagal Reflex Pathways"],
+  ["BASIC", "I.C.1.b.5", "I.C.1.b", "5)", "Sympathetic Nervous System: Ganglia, Rami Communicantes, Sympathetic Chain"],
+  ["BASIC", "I.C.1.b.5.a", "I.C.1.b.5", "a)", "Cranial Nerves"],
+  ["BASIC", "I.C.1.b.5.b", "I.C.1.b.5", "b)", "Carotid and Aortic Bodies, Carotid Sinus"],
+  ["BASIC", "I.C.1.b.5.c", "I.C.1.b.5", "c)", "Ganglia, Rami Communicantes, Sympathetic Chain"],
+  ["BASIC", "I.C.1.b.5.d", "I.C.1.b.5", "d)", "Nociception"],
+  ["BASIC", "I.C.1.b.5.d.1", "I.C.1.b.5.d", "(1)", "Peripheral Nociceptors: Transduction"],
+  ["BASIC", "I.C.1.b.5.d.2", "I.C.1.b.5.d", "(2)", "Afferent Pathways: Neurons, Dorsal Horn, CNS Pathways"],
+  ["BASIC", "I.C.2", "I.C", "2.", "Respiratory System"],
+  ["BASIC", "I.C.2.a", "I.C.2", "a.", "Physiology: Lung Functions and Cellular Processes"],
+  ["BASIC", "I.C.2.a.1", "I.C.2.a", "1)", "Lung Volumes"],
+  ["BASIC", "I.C.2.a.1.a", "I.C.2.a.1", "a)", "Definitions; Methods of Measurement; Normal Values; Time Constants"],
+  ["BASIC", "I.C.2.a.1.b", "I.C.2.a.1", "b)", "Spirometry; Static and Dynamic Volumes; Dead Space; Nitrogen Washout, O 2 Uptake, CO2 Production, Exercise Testing"],
+  ["BASIC", "I.C.2.a.2", "I.C.2.a", "2)", "Lung Mechanics"],
+  ["BASIC", "I.C.2.a.2.a", "I.C.2.a.2", "a)", "Static and Dynamic Compliance, Pleural Pressure Gradient, Flow-Volume Loops and Hysteresis, Surfactant, Laplace Law"],
+  ["BASIC", "I.C.2.a.2.b", "I.C.2.a.2", "b)", "Resistances; Principles of Gas Flow Measurement"],
+  ["BASIC", "I.C.2.a.2.c", "I.C.2.a.2", "c)", "Methods of Measurement"],
+  ["BASIC", "I.C.2.a.2.d", "I.C.2.a.2", "d)", "Work of Breathing"],
+  ["BASIC", "I.C.2.a.2.e", "I.C.2.a.2", "e)", "Regulation of Airway Caliber"],
+  ["BASIC", "I.C.2.a.3", "I.C.2.a", "3)", "Ventilation: Perfusion"],
+  ["BASIC", "I.C.2.a.3.a", "I.C.2.a.3", "a)", "Distribution of Ventilation"],
+  ["BASIC", "I.C.2.a.3.b", "I.C.2.a.3", "b)", "Distribution of Perfusion, Zones, Hypoxic Pulmonary Vasoconstriction"],
+  ["BASIC", "I.C.2.a.3.c", "I.C.2.a.3", "c)", "Alveolar Gas Equation"],
+  ["BASIC", "I.C.2.a.4", "I.C.2.a", "4)", "Diffusion"],
+  ["BASIC", "I.C.2.a.4.a", "I.C.2.a.4", "a)", "Definition, Pulmonary Diffusion Capacity"],
+  ["BASIC", "I.C.2.a.4.b", "I.C.2.a.4", "b)", "Apneic Oxygenation, Diffusion Hypoxia"],
+  ["BASIC", "I.C.2.a.5", "I.C.2.a", "5)", "Blood Gas"],
+  ["BASIC", "I.C.2.a.5.a", "I.C.2.a.5", "a)", "O2 Transport; O2 Physical Solubility; Oxyhemoglobin (Hb-O2) Saturation, Hb-O2 Dissociation Curve; 2,3-Diphosphoglycerate (2,3-DPG), P50, Respiratory Enzymes; Hemoglobin (Hb) as a Buffer"],
+  ["BASIC", "I.C.2.a.5.b", "I.C.2.a.5", "b)", "CO2 Transport; Blood CO2 Content; Carbonic Anhydrase; CO2 Dissociation Curve; Bohr Effect, Haldane Effect"],
+  ["BASIC", "I.C.2.a.5.c", "I.C.2.a.5", "c)", "Systemic Effects of Hypercarbia and Hypocarbia"],
+  ["BASIC", "I.C.2.a.5.d", "I.C.2.a.5", "d)", "Systemic Effects of Hyperoxia and Hypoxemia"],
+  ["BASIC", "I.C.2.a.5.e", "I.C.2.a.5", "e)", "Basic Interpretation of Arterial Blood Gas"],
+  ["BASIC", "I.C.2.a.6", "I.C.2.a", "6)", "Control of Ventilation"],
+  ["BASIC", "I.C.2.a.6.a", "I.C.2.a.6", "a)", "Respiratory Center"],
+  ["BASIC", "I.C.2.a.6.b", "I.C.2.a.6", "b)", "Central and Peripheral Chemoreceptors; Proprioceptive Receptors; Respiratory Muscles and Reflexes; Innervation"],
+  ["BASIC", "I.C.2.a.6.c", "I.C.2.a.6", "c)", "CO2 and O2 Response Curves"],
+  ["BASIC", "I.C.2.a.7", "I.C.2.a", "7)", "Non-Respiratory Functions of Lungs: Metabolic, Immune"],
+  ["BASIC", "I.C.2.a.8", "I.C.2.a", "8)", "Perioperative Smoking"],
+  ["BASIC", "I.C.2.a.8.a", "I.C.2.a.8", "a)", "Physiologic Effects"],
+  ["BASIC", "I.C.2.a.8.b", "I.C.2.a.8", "b)", "Cessation of Smoking"],
+  ["BASIC", "I.C.2.b", "I.C.2", "b.", "Anatomy"],
+  ["BASIC", "I.C.2.b.1", "I.C.2.b", "1)", "Nose"],
+  ["BASIC", "I.C.2.b.2", "I.C.2.b", "2)", "Pharynx: Subdivisions; Innervation"],
+  ["BASIC", "I.C.2.b.3", "I.C.2.b", "3)", "Larynx"],
+  ["BASIC", "I.C.2.b.3.a", "I.C.2.b.3", "a)", "Innervation; Muscles; Blood Supply; Cartilages"],
+  ["BASIC", "I.C.2.b.3.b", "I.C.2.b.3", "b)", "Vocal Cords, Positions with Paralysis"],
+  ["BASIC", "I.C.2.b.4", "I.C.2.b", "4)", "Tracheobronchial Tree"],
+  ["BASIC", "I.C.2.b.4.a", "I.C.2.b.4", "a)", "Structure and Relationships in Neck and Chest"],
+  ["BASIC", "I.C.2.b.5", "I.C.2.b", "5)", "Muscles of Respiration, Accessory Muscles"],
+  ["BASIC", "I.C.2.c", "I.C.2", "c.", "Pharmacology"],
+  ["BASIC", "I.C.2.c.1", "I.C.2.c", "1)", "Bronchodilators"],
+  ["BASIC", "I.C.2.c.1.a", "I.C.2.c.1", "a)", "β-Agonists"],
+  ["BASIC", "I.C.2.c.1.b", "I.C.2.c.1", "b)", "Anticholinergics"],
+  ["BASIC", "I.C.2.c.2", "I.C.2.c", "2)", "Anti-Inflammatory Medications"],
+  ["BASIC", "I.C.2.c.2.a", "I.C.2.c.2", "a)", "Steroids"],
+  ["BASIC", "I.C.2.c.2.b", "I.C.2.c.2", "b)", "Leukotriene Modifier Drugs"],
+  ["BASIC", "I.C.2.c.2.c", "I.C.2.c.2", "c)", "Mast Cell Stabilizers"],
+  ["BASIC", "I.C.2.c.2.d", "I.C.2.c.2", "d)", "Immunoglobulin E (IgE) Blockers"],
+  ["BASIC", "I.C.3", "I.C", "3.", "Cardiovascular System"],
+  ["BASIC", "I.C.3.a", "I.C.3", "a.", "Physiology"],
+  ["BASIC", "I.C.3.a.1", "I.C.3.a", "1)", "Cardiac Cycle"],
+  ["BASIC", "I.C.3.a.1.a", "I.C.3.a.1", "a)", "Control of Heart Rate"],
+  ["BASIC", "I.C.3.a.1.b", "I.C.3.a.1", "b)", "Synchronicity of Pressure, Flow, ECG, Sounds, Valve Action"],
+  ["BASIC", "I.C.3.a.1.c", "I.C.3.a.1", "c)", "Impulse Propagation"],
+  ["BASIC", "I.C.3.a.1.d", "I.C.3.a.1", "d)", "Normal ECG"],
+  ["BASIC", "I.C.3.a.1.e", "I.C.3.a.1", "e)", "Electrophysiology; Ion Channels and Currents"],
+  ["BASIC", "I.C.3.a.2", "I.C.3.a", "2)", "Ventricular Function"],
+  ["BASIC", "I.C.3.a.2.a", "I.C.3.a.2", "a)", "Frank-Starling Law; Preload and Afterload, Intracardiac Pressures"],
+  ["BASIC", "I.C.3.a.2.b", "I.C.3.a.2", "b)", "Force, Velocity, Length, Rate of Shortening"],
+  ["BASIC", "I.C.3.a.2.c", "I.C.3.a.2", "c)", "Myocardial Contractility, Measurement Limitations"],
+  ["BASIC", "I.C.3.a.2.d", "I.C.3.a.2", "d)", "Cardiac Output: Determinants and Regulation"],
+  ["BASIC", "I.C.3.a.2.e", "I.C.3.a.2", "e)", "Myocardial Oxygen Utilization"],
+  ["BASIC", "I.C.3.a.2.f", "I.C.3.a.2", "f)", "Systolic and Diastolic Function"],
+  ["BASIC", "I.C.3.a.2.g", "I.C.3.a.2", "g)", "Cardiac Output: Fick Principle"],
+  ["BASIC", "I.C.3.a.3", "I.C.3.a", "3)", "Venous Return"],
+  ["BASIC", "I.C.3.a.3.a", "I.C.3.a.3", "a)", "Vascular Compliance/Venous Capacitance; Controlling Factors"],
+  ["BASIC", "I.C.3.a.3.b", "I.C.3.a.3", "b)", "Muscle Action; Intrathoracic Pressure; Body Position"],
+  ["BASIC", "I.C.3.a.3.c", "I.C.3.a.3", "c)", "Blood Volume and Distribution"],
+  ["BASIC", "I.C.3.a.4", "I.C.3.a", "4)", "Blood Pressure"],
+  ["BASIC", "I.C.3.a.4.a", "I.C.3.a.4", "a)", "Systolic, Diastolic, Mean, and Perfusion Pressures"],
+  ["BASIC", "I.C.3.a.4.b", "I.C.3.a.4", "b)", "Intracardiac, Pulmonary, Venous"],
+  ["BASIC", "I.C.3.a.4.c", "I.C.3.a.4", "c)", "Systemic and Pulmonary Vascular Resistance, Viscosity"],
+  ["BASIC", "I.C.3.a.4.d", "I.C.3.a.4", "d)", "Baroreceptor Function"],
+  ["BASIC", "I.C.3.a.5", "I.C.3.a", "5)", "Microcirculation"],
+  ["BASIC", "I.C.3.a.5.a", "I.C.3.a.5", "a)", "Capillary Diffusion; Osmotic Pressure, Starling’s Law"],
+  ["BASIC", "I.C.3.a.5.b", "I.C.3.a.5", "b)", "Pre-Post Capillary Sphincter Control"],
+  ["BASIC", "I.C.3.a.5.c", "I.C.3.a.5", "c)", "Viscosity; Rheology"],
+  ["BASIC", "I.C.3.a.6", "I.C.3.a", "6)", "Regional Blood Flow and Its Regulation"],
+  ["BASIC", "I.C.3.a.6.a", "I.C.3.a.6", "a)", "Cerebral and Spinal Cord"],
+  ["BASIC", "I.C.3.a.6.b", "I.C.3.a.6", "b)", "Coronary"],
+  ["BASIC", "I.C.3.a.6.c", "I.C.3.a.6", "c)", "Pulmonary"],
+  ["BASIC", "I.C.3.a.6.d", "I.C.3.a.6", "d)", "Renal"],
+  ["BASIC", "I.C.3.a.6.e", "I.C.3.a.6", "e)", "Splanchnic:Hepatic"],
+  ["BASIC", "I.C.3.a.6.f", "I.C.3.a.6", "f)", "Muscle and Skin"],
+  ["BASIC", "I.C.3.a.6.g", "I.C.3.a.6", "g)", "Uterine and Placental"],
+  ["BASIC", "I.C.3.a.7", "I.C.3.a", "7)", "Regulation of Circulation and Blood Volume"],
+  ["BASIC", "I.C.3.a.7.a", "I.C.3.a.7", "a)", "Central: Vasomotor Center, Hypothalamic-Pituitary-Adrenal Axis"],
+  ["BASIC", "I.C.3.a.7.b", "I.C.3.a.7", "b)", "Peripheral: Receptors and Reflexes"],
+  ["BASIC", "I.C.3.a.7.c", "I.C.3.a.7", "c)", "Hormonal Control"],
+  ["BASIC", "I.C.3.a.7.d", "I.C.3.a.7", "d)", "Mixed Venous Oxygen Tension and Saturation"],
+  ["BASIC", "I.C.3.a.8", "I.C.3.a", "8)", "Basics of Cardiopulmonary R esuscitation; Medications, Defibrillators, Basic Life Support (BLS), Advanced Cardiac Life Support (ACLS) Algorithms"],
+  ["BASIC", "I.C.3.b", "I.C.3", "b.", "Anatomy"],
+  ["BASIC", "I.C.3.b.1", "I.C.3.b", "1)", "Normal Anatomy of Heart and Major Vessels"],
+  ["BASIC", "I.C.3.b.1.a", "I.C.3.b.1", "a)", "Coronary Circulation"],
+  ["BASIC", "I.C.3.b.1.b", "I.C.3.b.1", "b)", "Heart Conduction System"],
+  ["BASIC", "I.C.3.c", "I.C.3", "c.", "Pharmacology"],
+  ["BASIC", "I.C.3.c.1", "I.C.3.c", "1)", "Digitalis; Actions and Toxicity"],
+  ["BASIC", "I.C.3.c.2", "I.C.3.c", "2)", "Inotropes"],
+  ["BASIC", "I.C.3.c.3", "I.C.3.c", "3)", "Phosphodiesterase III Inhibitors (Inodilators): Milrinone, Others"],
+  ["BASIC", "I.C.3.c.4", "I.C.3.c", "4)", "Antiarrhythmics"],
+  ["BASIC", "I.C.3.c.5", "I.C.3.c", "5)", "Antianginal Drugs"],
+  ["BASIC", "I.C.3.c.6", "I.C.3.c", "6)", "Vasodilators: Nitroprusside, Nitroglycerin, Hydralazine, Nesiritide, Calcium Channel Blockers, Others"],
+  ["BASIC", "I.C.3.c.7", "I.C.3.c", "7)", "Angiotensin Converting Enzyme Inhibitors and Angiotensin Receptor Blockers"],
+  ["BASIC", "I.C.3.c.8", "I.C.3.c", "8)", "Electrolytes (Potassium, Magnesium, Phosphorus, Calcium): Cardiovascular Effects"],
+  ["BASIC", "I.C.3.c.9", "I.C.3.c", "9)", "Non-Adrenergic Vasoconstrictors: Vasopressin and Congeners"],
+  ["BASIC", "I.C.4", "I.C", "4.", "Gastrointestinal/Hepatic Systems"],
+  ["BASIC", "I.C.4.a", "I.C.4", "a.", "Physiology: Hepatic Function"],
+  ["BASIC", "I.C.4.a.1", "I.C.4.a", "1)", "Dual Blood Supply and Its Regulation"],
+  ["BASIC", "I.C.4.a.2", "I.C.4.a", "2)", "Metabolic and Synthetic Functions"],
+  ["BASIC", "I.C.4.a.3", "I.C.4.a", "3)", "Excretory Functions"],
+  ["BASIC", "I.C.4.a.4", "I.C.4.a", "4)", "Mechanisms of Drug Metabolism and Excretion, Cytochrome P450"],
+  ["BASIC", "I.C.4.b", "I.C.4", "b.", "Enhanced Recovery after Surgery for Colorectal Surgery"],
+  ["BASIC", "I.C.5", "I.C", "5.", "Renal and Urinary Systems/Electrolyte Balance"],
+  ["BASIC", "I.C.5.a", "I.C.5", "a.", "Physiology"],
+  ["BASIC", "I.C.5.a.1", "I.C.5.a", "1)", "Blood Flow, Glomerular Filtration, Tubular Reabsorption and Secretion"],
+  ["BASIC", "I.C.5.a.2", "I.C.5.a", "2)", "Renal Function Tests"],
+  ["BASIC", "I.C.5.a.3", "I.C.5.a", "3)", "Hormonal Regulation of Extracellular Fluid"],
+  ["BASIC", "I.C.5.a.4", "I.C.5.a", "4)", "Hormonal Regulation of Osmolality"],
+  ["BASIC", "I.C.5.a.5", "I.C.5.a", "5)", "Regulation of Acid-Base Balance"],
+  ["BASIC", "I.C.5.a.6", "I.C.5.a", "6)", "Drug Excretion"],
+  ["BASIC", "I.C.5.a.7", "I.C.5.a", "7)", "Water and Electrolytes: Distribution and Balance; Compartments"],
+  ["BASIC", "I.C.5.a.8", "I.C.5.a", "8)", "Renin-Angiotensin-Aldosterone System"],
+  ["BASIC", "I.C.5.b", "I.C.5", "b.", "Pharmacology"],
+  ["BASIC", "I.C.5.b.1", "I.C.5.b", "1)", "Diuretics"],
+  ["BASIC", "I.C.5.b.1.a", "I.C.5.b.1", "a)", "Mechanism of Action"],
+  ["BASIC", "I.C.5.b.1.b", "I.C.5.b.1", "b)", "Comparison of Drugs"],
+  ["BASIC", "I.C.5.b.1.c", "I.C.5.b.1", "c)", "Effect on Electrolytes and Acid-Base Balance"],
+  ["BASIC", "I.C.5.b.1.d", "I.C.5.b.1", "d)", "Adverse Effects"],
+  ["BASIC", "I.C.5.b.2", "I.C.5.b", "2)", "Dopaminergic Drugs"],
+  ["BASIC", "I.C.6", "I.C", "6.", "Hematologic System"],
+  ["BASIC", "I.C.6.a", "I.C.6", "a.", "Pharmacology"],
+  ["BASIC", "I.C.6.a.1", "I.C.6.a", "1)", "Anticoagulants, Antithrombotics, and Anti-Platelet Drugs"],
+  ["BASIC", "I.C.6.a.1.a", "I.C.6.a.1", "a)", "Mechanism of Action"],
+  ["BASIC", "I.C.6.a.1.b", "I.C.6.a.1", "b)", "Comparison of Drugs"],
+  ["BASIC", "I.C.6.a.1.c", "I.C.6.a.1", "c)", "Drug Interaction"],
+  ["BASIC", "I.C.6.a.1.d", "I.C.6.a.1", "d)", "Monitoring of Effects"],
+  ["BASIC", "I.C.6.a.1.e", "I.C.6.a.1", "e)", "Side Effects and Toxicity"],
+  ["BASIC", "I.C.6.a.1.f", "I.C.6.a.1", "f)", "Alternatives to Transfusion: Hemodilution, Sequestration, Autotransfusion, Blood Substitutes, Erythropoietin"],
+  ["BASIC", "I.C.6.a.2", "I.C.6.a", "2)", "Immunosuppressive and Anti-Rejection Drugs"],
+  ["BASIC", "I.C.6.b", "I.C.6", "b.", "Transfusions"],
+  ["BASIC", "I.C.6.b.1", "I.C.6.b", "1)", "Indications"],
+  ["BASIC", "I.C.6.b.2", "I.C.6.b", "2)", "Blood Preservation, Storage"],
+  ["BASIC", "I.C.6.b.3", "I.C.6.b", "3)", "Blood Filters and Pumps"],
+  ["BASIC", "I.C.6.b.4", "I.C.6.b", "4)", "Effects of Cooling and Heating; Blood Warmers"],
+  ["BASIC", "I.C.6.b.5", "I.C.6.b", "5)", "Blood Components, Volume Expanders"],
+  ["BASIC", "I.C.6.b.6", "I.C.6.b", "6)", "Preparation for Transfusion: Type and Cross, Type and Screen, Uncrossmatched Blood, Autologous Blood, Designated Donors"],
+  ["BASIC", "I.C.6.c", "I.C.6", "c.", "Reactions to Transfusions"],
+  ["BASIC", "I.C.6.c.1", "I.C.6.c", "1)", "Febrile"],
+  ["BASIC", "I.C.6.c.2", "I.C.6.c", "2)", "Allergic"],
+  ["BASIC", "I.C.6.c.3", "I.C.6.c", "3)", "Hemolytic: Acute and Delayed"],
+  ["BASIC", "I.C.6.d", "I.C.6", "d.", "Complications of Transfusions"],
+  ["BASIC", "I.C.6.d.1", "I.C.6.d", "1)", "Infections: Hepatitis, Human Immunodeficiency Virus (HIV), Cytomegalovirus (CMV), Others"],
+  ["BASIC", "I.C.6.d.2", "I.C.6.d", "2)", "Citrate Intoxication"],
+  ["BASIC", "I.C.6.d.3", "I.C.6.d", "3)", "Electrolyte and Acid Base Abnormalities"],
+  ["BASIC", "I.C.6.d.4", "I.C.6.d", "4)", "Massive Transfusion: Coagulopathies, Hypothermia"],
+  ["BASIC", "I.C.6.d.5", "I.C.6.d", "5)", "Pulmonary"],
+  ["BASIC", "I.C.6.d.5.a", "I.C.6.d.5", "a)", "Transfusion-Related Acute Lung Injury"],
+  ["BASIC", "I.C.6.d.5.b", "I.C.6.d.5", "b)", "Transfusion-Related Circulatory Overload"],
+  ["BASIC", "I.C.6.d.6", "I.C.6.d", "6)", "Immunosuppression"],
+  ["BASIC", "I.C.7", "I.C", "7.", "Endocrine and Metabolic Systems"],
+  ["BASIC", "I.C.7.a", "I.C.7", "a.", "Physiology"],
+  ["BASIC", "I.C.7.a.1", "I.C.7.a", "1)", "Hypothalamus, Pituitary; Thyroid; Parathyroid, Adrenal Medulla, Adrenal Cortex and Pancreas"],
+  ["BASIC", "I.C.7.b", "I.C.7", "b.", "Biochemistry of Normal Body Metabolism"],
+  ["BASIC", "I.C.7.b.1", "I.C.7.b", "1)", "Carbohydrates"],
+  ["BASIC", "I.C.7.b.1.a", "I.C.7.b.1", "a)", "Aerobic and Anaerobic Utilization; Chemical Processes, Enzymes"],
+  ["BASIC", "I.C.7.b.1.b", "I.C.7.b.1", "b)", "Relationship to Hormones; Insulin; Human Growth Hormone, Glucocorticoids; Glucagon, Epinephrine"],
+  ["BASIC", "I.C.7.b.1.c", "I.C.7.b.1", "c)", "Effect of Stress"],
+  ["BASIC", "I.C.7.b.1.d", "I.C.7.b.1", "d)", "Perioperative Management of Insulin"],
+  ["BASIC", "I.C.7.b.2", "I.C.7.b", "2)", "Proteins"],
+  ["BASIC", "I.C.7.b.2.a", "I.C.7.b.2", "a)", "Functions, Hormones, Antibodies"],
+  ["BASIC", "I.C.7.b.2.b", "I.C.7.b.2", "b)", "Cyclic Adenosine Monophosphate (CAMP); Cyclic Guanosine Monophosphate (CGMP)"],
+  ["BASIC", "I.C.7.b.2.c", "I.C.7.b.2", "c)", "Lipids: Triglycerides, Lipoproteins, Cholesterol"],
+  ["BASIC", "I.C.7.b.2.c.1", "I.C.7.b.2.c", "(1)", "Specific Organ Metabolism (Brain, Heart, Liver, Muscle)"],
+  ["BASIC", "I.C.8", "I.C", "8.", "Anatomy and Physiology of Neuromuscular Junction"],
+  ["BASIC", "I.C.8.a", "I.C.8", "a.", "Physiology of Neuromuscular Transmission"],
+  ["BASIC", "I.C.8.a.1", "I.C.8.a", "1)", "Prejunctional Events: Acetylcholine Synthesis and Release, Modulation by Nicotinic and Muscarinic Prejunctional Receptors"],
+  ["BASIC", "I.C.8.a.2", "I.C.8.a", "2)", "Postjunctional Events: Acetylcholine Binding to Acetylcholine Receptors, Ion Flow through Acetylcholine Receptor"],
+  ["BASIC", "I.C.8.b", "I.C.8", "b.", "Anatomy of the Neuromuscular Junction"],
+  ["BASIC", "I.C.8.b.1", "I.C.8.b", "1)", "Prejunctional Components: Motor Neurons, Neuronal Transport System, Synaptic Vesicles"],
+  ["BASIC", "I.C.8.b.2", "I.C.8.b", "2)", "Postjunctional Components: Muscle Cell, Acetylcholine Receptor"],
+  ["BASIC", "I.C.8.b.3", "I.C.8.b", "3)", "Perijunctional Voltage-Gated Channels"],
+  ["BASIC", "I.D", null, "D.", "Special Problems or Issues in Anesthesiology"],
+  ["BASIC", "I.D.1", "I.D", "1.", "Physician Impairment or Disability: Substance Abuse, Fatigue, Aging, Visual and Auditory Impairment, American Disabilities Act, Clinician Well-Being"],
+  ["BASIC", "I.D.2", "I.D", "2.", "Ethics, Practice Management, and Medicolegal Issues"],
+  ["BASIC", "I.D.2.a", "I.D.2", "a.", "Professionalism"],
+  ["BASIC", "I.D.2.b", "I.D.2", "b.", "Ethics, Advance Directives/Do Not Resuscitate (DNR) Orders; Suspended DNR, Patient Privacy Issues, e.g., Health Insurance Portability and Accountability Act (HIPAA)"],
+  ["BASIC", "I.D.2.c", "I.D.2", "c.", "Informed Consent (Principles, Components)"],
+  ["BASIC", "I.D.2.c.1", "I.D.2.c", "1)", "Shared Patient Decision-Making"],
+  ["BASIC", "I.D.2.d", "I.D.2", "d.", "Patient Safety"],
+  ["BASIC", "I.D.2.d.1", "I.D.2.d", "1)", "Medication Errors: Assessment and Prevention"],
+  ["BASIC", "I.D.2.d.2", "I.D.2.d", "2)", "Disclosure of Errors to Patients"],
+  ["BASIC", "I.D.2.e", "I.D.2", "e.", "Core Competencies"],
+  ["ADVANCED", "II.A", null, "A.", "Basic Sciences"],
+  ["ADVANCED", "II.A.1", "II.A", "1.", "Physics, Monitoring, and Anesthesia Delivery Devices"],
+  ["ADVANCED", "II.A.1.a", "II.A.1", "a.", "Monitoring Methods"],
+  ["ADVANCED", "II.A.1.a.1", "II.A.1.a", "1)", "Vascular Pressures: Arterial (Invasive/Noninvasive Differences), Central Venous (CVP), Pulmonary Arterial (PAP), Pulmonary Artery Occlusion (PAOP), Left Atrial (LAP), Left Ventricular End-Diastolic (LVEDP)"],
+  ["ADVANCED", "II.A.1.a.2", "II.A.1.a", "2)", "Heart Function: Clinical Methods and Uses of Heart Tones, Electrocardiogram (ECG), Echocardiography, Doppler, Cardiac Output"],
+  ["ADVANCED", "II.A.1.a.3", "II.A.1.a", "3)", "Brain and Spinal Cord Function: Electroencephalogram (EEG) (Raw and Processed), Depth of Anesthesia Monitors (Bispectral, Other), Evoked Potentials, Wake-Up Test, Intracranial Pressure (ICP), Jugular Venous Oxygen Saturation, Near Infrared Spectroscopy (Cerebral Oximetry), Transcranial Doppler"],
+  ["ADVANCED", "II.A.1.a.4", "II.A.1.a", "4)", "Mixed Venous Oxygen Saturation (SvO 2)"],
+  ["ADVANCED", "II.A.1.b", "II.A.1", "b.", "Instrumentation"],
+  ["ADVANCED", "II.A.1.b.1", "II.A.1.b", "1)", "Cardiac Output: Fick, Dye Dilution, Thermodilution, Doppler, Impedance, Pulse Wave Analysis, Stroke Volume Assessment"],
+  ["ADVANCED", "II.A.1.b.2", "II.A.1.b", "2)", "Echocardiography: Technical Aspects, Complications"],
+  ["ADVANCED", "II.A.1.b.3", "II.A.1.b", "3)", "Coagulation Monitors"],
+  ["ADVANCED", "II.A.1.b.4", "II.A.1.b", "4)", "Ultrasound-Guided Placement of Vascular Catheters (Arterial, Central Venous) and Nerve Blocks"],
+  ["ADVANCED", "II.A.1.b.5", "II.A.1.b", "5)", "Point-of-Care Ultrasound (POCUS): Lung, IVC, Bladder, Gastric"],
+  ["ADVANCED", "II.A.1.c", "II.A.1", "c.", "Ventilators"],
+  ["ADVANCED", "II.A.1.c.1", "II.A.1.c", "1)", "Continuous Positive Airway Pressure (CPAP) and Positive End-Expiratory Pressure (PEEP), Nasal CPAP"],
+  ["ADVANCED", "II.A.1.c.2", "II.A.1.c", "2)", "Nebulizers, Humidifiers, Drug Delivery Systems (Nitric Oxide, Others)"],
+  ["ADVANCED", "II.A.1.d", "II.A.1", "d.", "Pacemakers: Design and Function"],
+  ["ADVANCED", "II.A.1.d.1", "II.A.1.d", "1)", "Temporary Transvenous; Permanent (Epicardial, Endocardial), Transcutaneous"],
+  ["ADVANCED", "II.A.1.d.2", "II.A.1.d", "2)", "Types: Fixed Rate, Biventricular Synchronized, Ventricular, Atrial, Atrio-Ventricular (A-V) Sequential"],
+  ["ADVANCED", "II.A.1.d.3", "II.A.1.d", "3)", "Standard Nomenclature"],
+  ["ADVANCED", "II.A.1.d.4", "II.A.1.d", "4)", "Reasons for Failure or Malfunction"],
+  ["ADVANCED", "II.A.1.e", "II.A.1", "e.", "Electrical, Fire, and Explosion Hazards"],
+  ["ADVANCED", "II.A.1.e.1", "II.A.1.e", "1)", "Causes of Intraoperative Fires"],
+  ["ADVANCED", "II.A.1.e.2", "II.A.1.e", "2)", "Treatment of Intraoperative Fires"],
+  ["ADVANCED", "II.A.1.e.3", "II.A.1.e", "3)", "Lasers and Laser Safety"],
+  ["ADVANCED", "II.A.1.f", "II.A.1", "f.", "Drug Delivery Devices: Patient-Controlled IV and Epidural Analgesia, Epidural and Subarachnoid Continuous Drug Delivery Devices"],
+  ["ADVANCED", "II.A.2", "II.A", "2.", "Pharmacology"],
+  ["ADVANCED", "II.A.2.a", "II.A.2", "a.", "General Concepts"],
+  ["ADVANCED", "II.A.2.a.1", "II.A.2.a", "1)", "Pharmacogenetics"],
+  ["ADVANCED", "II.A.2.a.1.a", "II.A.2.a.1", "a)", "Malignant Hyperthermia ( Including Diagnosis and Therapy)"],
+  ["ADVANCED", "II.A.2.a.1.b", "II.A.2.a.1", "b)", "Butyrylcholinesterase (Pseudocholinesterase) Deficiency"],
+  ["ADVANCED", "II.A.2.a.1.c", "II.A.2.a.1", "c)", "Prolonged Qt Syndrome"],
+  ["ADVANCED", "II.A.2.a.1.d", "II.A.2.a.1", "d)", "Genetic Factors in Drug Dose-Response Relationships"],
+  ["ADVANCED", "II.A.2.a.1.e", "II.A.2.a.1", "e)", "Rapid Metabolizers"],
+  ["ADVANCED", "II.A.2.a.2", "II.A.2.a", "2)", "Addiction"],
+  ["ADVANCED", "II.A.2.a.2.a", "II.A.2.a.2", "a)", "Physiology and Pharmacology"],
+  ["ADVANCED", "II.A.2.a.2.b", "II.A.2.a.2", "b)", "Patient Addiction: Anesthetic Implications"],
+  ["ADVANCED", "II.A.2.a.2.c", "II.A.2.a.2", "c)", "Addiction vs. Tolerance"],
+  ["ADVANCED", "II.A.3", "II.A", "3.", "Interpreting Data"],
+  ["ADVANCED", "II.A.3.a", "II.A.3", "a.", "Simple Math: Logarithms, Logarithmic Transformation; Graph of Simple Equations; Exponential Function, Analysis of Biologic Curves"],
+  ["ADVANCED", "II.A.3.b", "II.A.3", "b.", "Visual Display of Data: Dissociation Curves; Scatter Plot; Line Graph; Histograms; Error Bars; Bar and Whisker Plots; Survival Curves"],
+  ["ADVANCED", "II.A.3.c", "II.A.3", "c.", "Summarizing and Comparing Data"],
+  ["ADVANCED", "II.A.3.c.1", "II.A.3.c", "1)", "Types of Data: Binary, Categorical, Ordinal, Continuous Normal, Continuous Non- Normal"],
+  ["ADVANCED", "II.A.3.c.2", "II.A.3.c", "2)", "Summary Measures: Proportions, Measures of Centricity ( Mean, Median, Mode), Measures of Dispersion ( Standard Deviation, Interquartile Range), Standardized Difference"],
+  ["ADVANCED", "II.A.3.c.3", "II.A.3.c", "3)", "Statistical Inference: Sample vs . Population; Standard Error of the Mean; Statistical Power; p-Value; Type I Error; Type II Error; Correction for Multiple Comparisons"],
+  ["ADVANCED", "II.A.3.c.4", "II.A.3.c", "4)", "Statistical Tests: T-Test, Chi-Square, ANOVA"],
+  ["ADVANCED", "II.A.3.c.5", "II.A.3.c", "5)", "Regression: Linear, Logistic, Univariable, Multivariable, Cox"],
+  ["ADVANCED", "II.A.3.c.6", "II.A.3.c", "6)", "Effect Sizes: Odds Ratio, Relative Risk, Absolute Risk Reduction, Number Needed to Treat, Hazard Ratio, Confidence Interval"],
+  ["ADVANCED", "II.A.3.c.7", "II.A.3.c", "7)", "Survival Analysis and Time-to-Event Data"],
+  ["ADVANCED", "II.A.3.c.8", "II.A.3.c", "8)", "Heterogeneity Among Populations or Studies"],
+  ["ADVANCED", "II.A.3.d", "II.A.3", "d.", "Validity and Precision; Types of Bias, Inter-Rater Reliability"],
+  ["ADVANCED", "II.A.3.e", "II.A.3", "e.", "Causal Inference: Confounder; Propensity Weighting/Matching"],
+  ["ADVANCED", "II.A.3.f", "II.A.3", "f.", "Diagnosis and Prediction: AUROC/ Discrimination, Calibration, Sensitivity, Specificity, Positive and Negative Predictive Value, Prevalence"],
+  ["ADVANCED", "II.A.3.g", "II.A.3", "g.", "Study Design"],
+  ["ADVANCED", "II.A.3.g.1", "II.A.3.g", "1)", "Observational Studies: Cross-Sectional, Case-Control, Cohort, Natural Experiments"],
+  ["ADVANCED", "II.A.3.g.2", "II.A.3.g", "2)", "Interventional Studies: Randomization, Blinding"],
+  ["ADVANCED", "II.A.3.g.3", "II.A.3.g", "3)", "Summary of Evidence: Meta-Analysis; Systematic Review; Narrative Review; Practice Guidelines"],
+  ["ADVANCED", "II.B", null, "B.", "Clinical Sciences: Anesthesia Procedures, Methods, and Techniques"],
+  ["ADVANCED", "II.B.1", "II.B", "1.", "Regional Anesthesia"],
+  ["ADVANCED", "II.B.1.a", "II.B.1", "a.", "Peripheral Nerve Blocks: Indications, Contraindications, Techniques and Comparisons of Techniques, Complications"],
+  ["ADVANCED", "II.B.1.a.1", "II.B.1.a", "1)", "Head and Neck Including Retrobulbar/Peribulbar, Facial, Trigeminal Nerve and Branches, Cervical Plexus, Glossopharyngeal, Superior Laryngeal, Transtracheal, Occipital"],
+  ["ADVANCED", "II.B.1.a.2", "II.B.1.a", "2)", "Extremities Including Brachial Plexus (Interscalene, Supraclavicular, Infraclavicular, Axillary), Ulnar, Radial, Median, Musculocutaneous, Sciatic, Femoral, Fascia Iliaca, Lateral Femoral Cutaneous, Genito-Femoral, Obturator, Lumbar Plexus (PSOAS Block), Adductor Canal/Saphenous, Popliteal Fossa, Ankle Block, IV Regional Anesthesia"],
+  ["ADVANCED", "II.B.1.a.3", "II.B.1.a", "3)", "Trunk Including Intercostal, Serratus Anterior Plane blocks, Parasternal Intercostal Plane blocks, Paravertebral Somatic, Ilio-Inguinal, Erector Spinae Plane, Retrolaminar, Rectus Sheath, Ilioinguinal Iliohypogastric, Transversus Abdominis Plane blocks, Quadratus Lumborum Blocks, Transversalis Fascia Plane"],
+  ["ADVANCED", "II.B.1.b", "II.B.1", "b.", "Neuraxial Blocks Including Epidural (Cervical, Thoracic, Lumbar, Caudal, Transforaminal), Spinal (Subarachnoid), Combined Spinal-Epidural"],
+  ["ADVANCED", "II.B.1.c", "II.B.1", "c.", "Regional Anesthesia for ERAS"],
+  ["ADVANCED", "II.B.1.d", "II.B.1", "d.", "Factors affecting Onset and Duration, and Termination of Action"],
+  ["ADVANCED", "II.B.1.e", "II.B.1", "e.", "Use and Clinical Implications of Nerve Stimulators, Ultrasound, and Catheters"],
+  ["ADVANCED", "II.B.1.f", "II.B.1", "f.", "Implications and Management of Anticoagulants and Platelet Inhibitors"],
+  ["ADVANCED", "II.B.1.f.1", "II.B.1.f", "1)", "American Society of Regional Anesthesia and Pain Medicine (ASRA) Guidelines for Regional Anesthesia in the Patient Receiving Antithrombotic or Thrombolytic Therapy"],
+  ["ADVANCED", "II.B.1.g", "II.B.1", "g.", "Diagnosis and Management of LAST"],
+  ["ADVANCED", "II.B.1.g.1", "II.B.1.g", "1)", "Prevention"],
+  ["ADVANCED", "II.B.1.g.2", "II.B.1.g", "2)", "Treatment"],
+  ["ADVANCED", "II.B.2", "II.B", "2.", "Special Techniques"],
+  ["ADVANCED", "II.B.2.a", "II.B.2", "a.", "Controlled Hypotension; Choice of Drugs, Use of Posture, Ventilation"],
+  ["ADVANCED", "II.B.2.b", "II.B.2", "b.", "Targeted Temperature Management; Techniques, Systemic Effects, Shivering, Rewarming, Complications"],
+  ["ADVANCED", "II.B.2.c", "II.B.2", "c.", "Hyperbaric Oxygen and Anesthesia Care"],
+  ["ADVANCED", "II.B.2.d", "II.B.2", "d.", "High Altitude Anesthesia"],
+  ["ADVANCED", "II.B.2.e", "II.B.2", "e.", "Extracorporeal Support"],
+  ["ADVANCED", "II.C", null, "C.", "Organ-Based Advanced Clinical Sciences"],
+  ["ADVANCED", "II.C.1", "II.C", "1.", "Central and Peripheral Nervous Systems"],
+  ["ADVANCED", "II.C.1.a", "II.C.1", "a.", "Physiology"],
+  ["ADVANCED", "II.C.1.a.1", "II.C.1.a", "1)", "Metabolism: Substrates, Aerobic and Anaerobic"],
+  ["ADVANCED", "II.C.1.a.2", "II.C.1.a", "2)", "Intracranial Pressure"],
+  ["ADVANCED", "II.C.1.a.2.a", "II.C.1.a.2", "a)", "Brain Volume, Elastance and Compliance"],
+  ["ADVANCED", "II.C.1.a.2.b", "II.C.1.a.2", "b)", "Increased ICP, Herniation"],
+  ["ADVANCED", "II.C.1.a.3", "II.C.1.a", "3)", "Electroencephalography (EEG)"],
+  ["ADVANCED", "II.C.1.a.3.a", "II.C.1.a.3", "a)", "Wave Patterns, Frequency and Amplitude, Raw and Processed, Spectral Edge"],
+  ["ADVANCED", "II.C.1.a.3.b", "II.C.1.a.3", "b)", "Sleep, Convulsions; O 2 and CO2; Hypothermia; Brain Death"],
+  ["ADVANCED", "II.C.1.a.3.c", "II.C.1.a.3", "c)", "Depth of Anesthesia; Burst Suppression, Electrical Silence, Specific Anesthetic and Drug Effects"],
+  ["ADVANCED", "II.C.1.a.4", "II.C.1.a", "4)", "Evoked Responses"],
+  ["ADVANCED", "II.C.1.a.4.a", "II.C.1.a.4", "a)", "Morphology, Effects of Ischemia and Anesthetics"],
+  ["ADVANCED", "II.C.1.a.4.b", "II.C.1.a.4", "b)", "Sensory: Somatosensory, Visual, Brainstem Auditory"],
+  ["ADVANCED", "II.C.1.a.4.c", "II.C.1.a.4", "c)", "Motor"],
+  ["ADVANCED", "II.C.1.b", "II.C.1", "b.", "Anatomy"],
+  ["ADVANCED", "II.C.1.b.1", "II.C.1.b", "1)", "Functional Anatomy or the Peripheral Nervous System: Sensory and Motor Distributions of Peripheral Nerves"],
+  ["ADVANCED", "II.C.1.b.1.a", "II.C.1.b.1", "a)", "Somatic"],
+  ["ADVANCED", "II.C.1.b.1.b", "II.C.1.b.1", "b)", "Autonomic"],
+  ["ADVANCED", "II.C.1.c", "II.C.1", "c.", "Pharmacology"],
+  ["ADVANCED", "II.C.1.c.1", "II.C.1.c", "1)", "CNS Drugs for Non-Anesthetic Use (Major Actions, Comparison of Drugs; Effect on Respiration; Circulation, Adverse Effects)"],
+  ["ADVANCED", "II.C.1.c.1.a", "II.C.1.c.1", "a)", "Pre- and Postanesthetic Medications"],
+  ["ADVANCED", "II.C.1.c.1.a.1", "II.C.1.c.1.a", "(1)", "Opioids"],
+  ["ADVANCED", "II.C.1.c.1.a.2", "II.C.1.c.1.a", "(2)", "Opioid Antagonists, Agonist-Antagonists"],
+  ["ADVANCED", "II.C.1.c.1.b", "II.C.1.c.1", "b)", "Alpha-2 Agonists: Clonidine, Dexmedetomidine"],
+  ["ADVANCED", "II.C.1.c.1.c", "II.C.1.c.1", "c)", "Tranquilizers: Butyrophenones; Benzodiazepines"],
+  ["ADVANCED", "II.C.1.c.1.d", "II.C.1.c.1", "d)", "Anticonvulsants: Phenytoin, Carbamazepine, Gabapentin, Barbiturates, Others"],
+  ["ADVANCED", "II.C.1.c.1.e", "II.C.1.c.1", "e)", "Antidepressants, Anti-Parkinson Drugs"],
+  ["ADVANCED", "II.C.1.c.1.f", "II.C.1.c.1", "f)", "Arousal Agents: Physostigmine, Benzodiazepine Antagonists"],
+  ["ADVANCED", "II.C.1.c.1.g", "II.C.1.c.1", "g)", "Substance Abuse and Addiction; Dependence"],
+  ["ADVANCED", "II.C.1.c.1.g.1", "II.C.1.c.1.g", "(1)", "Chronic Opioid Dependence and Therapy"],
+  ["ADVANCED", "II.C.1.c.1.g.2", "II.C.1.c.1.g", "(2)", "Pharmacologically-Assisted Opioid Withdrawal"],
+  ["ADVANCED", "II.C.1.c.2", "II.C.1.c", "2)", "Autonomic Drugs"],
+  ["ADVANCED", "II.C.1.c.2.a", "II.C.1.c.2", "a)", "Sympathetic"],
+  ["ADVANCED", "II.C.1.c.2.a.1", "II.C.1.c.2.a", "(1)", "Transmitters and Types of Receptors"],
+  ["ADVANCED", "II.C.1.c.2.a.2", "II.C.1.c.2.a", "(2)", "Target Organ Effects; Metabolic Effects"],
+  ["ADVANCED", "II.C.1.c.2.a.3", "II.C.1.c.2.a", "(3)", "Agonists: Peripheral and Central Actions, Direct and Indirect Actions, Alpha vs. Beta vs. Mixed Agonists, Alpha and Beta-Receptor Subtype-Selective Agonists"],
+  ["ADVANCED", "II.C.1.c.2.a.4", "II.C.1.c.2.a", "(4)", "Antagonists: Alpha and Beta Blockers, Selective Blockers, Ganglionic Blockers"],
+  ["ADVANCED", "II.C.1.c.2.b", "II.C.1.c.2", "b)", "Parasympathetic"],
+  ["ADVANCED", "II.C.1.c.2.b.1", "II.C.1.c.2.b", "(1)", "Transmitters"],
+  ["ADVANCED", "II.C.1.c.2.b.2", "II.C.1.c.2.b", "(2)", "Muscarinic Effects"],
+  ["ADVANCED", "II.C.1.c.2.b.3", "II.C.1.c.2.b", "(3)", "Nicotinic Effects"],
+  ["ADVANCED", "II.C.1.c.2.b.4", "II.C.1.c.2.b", "(4)", "Agonists: Cholinergic and Anticholinesterases"],
+  ["ADVANCED", "II.C.1.c.2.b.5", "II.C.1.c.2.b", "(5)", "Antagonists"],
+  ["ADVANCED", "II.C.1.d", "II.C.1", "d.", "Clinical Science"],
+  ["ADVANCED", "II.C.1.d.1", "II.C.1.d", "1)", "CNS"],
+  ["ADVANCED", "II.C.1.d.1.a", "II.C.1.d.1", "a)", "Seizures"],
+  ["ADVANCED", "II.C.1.d.1.b", "II.C.1.d.1", "b)", "Coma: Traumatic, Infectious, Toxic-Metabolic, Cerebrovascular Accident (CVA), Cerebral Hypoxia"],
+  ["ADVANCED", "II.C.1.d.1.b.1", "II.C.1.d.1.b", "(1)", "Glasgow Coma Scale, Management of Traumatic Brain Injury"],
+  ["ADVANCED", "II.C.1.d.1.b.2", "II.C.1.d.1.b", "(2)", "Therapeutic Barbiturate Coma"],
+  ["ADVANCED", "II.C.1.d.1.c", "II.C.1.d.1", "c)", "Drug Intoxication (CNS Drugs, Carbon Monoxide, Insecticides, Nerve Gases)"],
+  ["ADVANCED", "II.C.1.d.1.d", "II.C.1.d.1", "d)", "Paraplegia, Quadriplegia, Spinal Shock, Autonomic Hyperreflexia"],
+  ["ADVANCED", "II.C.1.d.1.d.1", "II.C.1.d.1.d", "(1)", "Airway Management in the Patient with Cervical Spine Disease"],
+  ["ADVANCED", "II.C.1.d.1.e", "II.C.1.d.1", "e)", "Tetanus"],
+  ["ADVANCED", "II.C.1.d.1.f", "II.C.1.d.1", "f)", "Special Problems of Anesthesia for Neurosurgery"],
+  ["ADVANCED", "II.C.1.d.1.f.1", "II.C.1.d.1.f", "(1)", "Increased Intracranial Pressure: Tumors, Hematomas, Hydrocephalus"],
+  ["ADVANCED", "II.C.1.d.1.f.2", "II.C.1.d.1.f", "(2)", "Positioning: Prone, Sitting, Other, Head Stabilization in Tongs"],
+  ["ADVANCED", "II.C.1.d.1.f.3", "II.C.1.d.1.f", "(3)", "Air Embolism"],
+  ["ADVANCED", "II.C.1.d.1.f.4", "II.C.1.d.1.f", "(4)", "Cerebral Protection from Hypoxia, Ischemia, Glucose Effects"],
+  ["ADVANCED", "II.C.1.d.1.f.5", "II.C.1.d.1.f", "(5)", "Aneurysms and A-V Malformations, Cerebral Vasospasm"],
+  ["ADVANCED", "II.C.1.d.1.f.6", "II.C.1.d.1.f", "(6)", "Interventional Neuroradiology; Coils and Embolization"],
+  ["ADVANCED", "II.C.1.d.1.f.7", "II.C.1.d.1.f", "(7)", "Pituitary Adenomas, Trans-Sphenoidal Hypophysectomy"],
+  ["ADVANCED", "II.C.1.d.1.f.8", "II.C.1.d.1.f", "(8)", "Anesthetic and Ventilatory Effects on Cerebral Blood Flow and Metabolism"],
+  ["ADVANCED", "II.C.1.d.1.f.9", "II.C.1.d.1.f", "(9)", "Fluid Management: Hypertonic vs. Isotonic Saline vs. Balanced Salt Solutions"],
+  ["ADVANCED", "II.C.1.d.1.f.10", "II.C.1.d.1.f", "(10)", "Spinal Fluid Drainage"],
+  ["ADVANCED", "II.C.1.d.1.f.11", "II.C.1.d.1.f", "(11)", "Stereotactic and Gamma-Knife Techniques, Deep Brain Stimulator Placement, Intra operative Wake-Up Techniques"],
+  ["ADVANCED", "II.C.1.d.1.f.12", "II.C.1.d.1.f", "(12)", "Ventriculostomy"],
+  ["ADVANCED", "II.C.1.d.1.f.13", "II.C.1.d.1.f", "(13)", "Awake Craniotomy"],
+  ["ADVANCED", "II.C.1.d.1.f.14", "II.C.1.d.1.f", "(14)", "Postoperative Visual Loss"],
+  ["ADVANCED", "II.C.1.d.1.f.15", "II.C.1.d.1.f", "(15)", "Cerebral Protection"],
+  ["ADVANCED", "II.C.1.d.1.f.15.a", "II.C.1.d.1.f.15", "(a)", "Hypothermia"],
+  ["ADVANCED", "II.C.1.d.1.f.15.b", "II.C.1.d.1.f.15", "(b)", "Anesthetic and Adjuvant Drugs"],
+  ["ADVANCED", "II.C.2", "II.C", "2.", "Respiratory System"],
+  ["ADVANCED", "II.C.2.a", "II.C.2", "a.", "Physiology: Lung Functions and Cellular Processes"],
+  ["ADVANCED", "II.C.2.a.1", "II.C.2.a", "1)", "Ventilation: Perfusion"],
+  ["ADVANCED", "II.C.2.a.1.a", "II.C.2.a.1", "a)", "Measurement of Ventilation/Perfusion (V/Q) Ratio, Implications of Alveolar-Arterial O2 Gradient (A-aDO2), Arterial-Alveolar CO2 Gradient (A-aDCO2), Dead Space to Tidal Volume Ratio (Vd/Vt), Shunt Fraction (Qs/Qt), Lung Scan"],
+  ["ADVANCED", "II.C.2.b", "II.C.2", "b.", "Anatomy"],
+  ["ADVANCED", "II.C.2.b.1", "II.C.2.b", "1)", "Lungs"],
+  ["ADVANCED", "II.C.2.b.1.a", "II.C.2.b.1", "a)", "Divisions and Bronchoscopic Anatomy"],
+  ["ADVANCED", "II.C.2.b.1.b", "II.C.2.b.1", "b)", "Bronchial and Pulmonary Circulations"],
+  ["ADVANCED", "II.C.2.b.1.c", "II.C.2.b.1", "c)", "Microscopic Anatomy"],
+  ["ADVANCED", "II.C.2.c", "II.C.2", "c.", "Biochemistry"],
+  ["ADVANCED", "II.C.2.c.1", "II.C.2.c", "1)", "Normal Acid-Base Regulation: Buffer Systems; Compensatory Mechanisms"],
+  ["ADVANCED", "II.C.2.c.2", "II.C.2.c", "2)", "Effects of Imbalance on Electrolytes and Organ Perfusion"],
+  ["ADVANCED", "II.C.2.c.3", "II.C.2.c", "3)", "Strong Ionic Difference (SID)"],
+  ["ADVANCED", "II.C.2.c.4", "II.C.2.c", "4)", "ABG Interpretation"],
+  ["ADVANCED", "II.C.2.c.4.a", "II.C.2.c.4", "a)", "Anion Gap"],
+  ["ADVANCED", "II.C.2.c.4.b", "II.C.2.c.4", "b)", "Temperature Effect on Blood Gases: Alpha-Stat vs. pH-Stat"],
+  ["ADVANCED", "II.C.2.d", "II.C.2", "d.", "Clinical Science"],
+  ["ADVANCED", "II.C.2.d.1", "II.C.2.d", "1)", "Respiratory System"],
+  ["ADVANCED", "II.C.2.d.1.a", "II.C.2.d.1", "a)", "Obstructive Disease"],
+  ["ADVANCED", "II.C.2.d.1.a.1", "II.C.2.d.1.a", "(1)", "Upper Airway: Congenital, Infectious, Neoplastic, Traumatic, Foreign Body, Obstructive Sleep Apnea"],
+  ["ADVANCED", "II.C.2.d.1.a.2", "II.C.2.d.1.a", "(2)", "Tracheobronchial: Congenital, Infectious, Neoplastic, Traumatic, Foreign Body"],
+  ["ADVANCED", "II.C.2.d.1.a.3", "II.C.2.d.1.a", "(3)", "Parenchymal: Asthma, Bronchitis, Emphysema, COPD, Lung Abscess, Bronchiectasis, Cystic Fibrosis, Mediastinal Masses"],
+  ["ADVANCED", "II.C.2.d.1.b", "II.C.2.d.1", "b)", "Restrictive Disease"],
+  ["ADVANCED", "II.C.2.d.1.b.1", "II.C.2.d.1.b", "(1)", "Neurologic: CNS Depression, Spinal Cord Dysfunction, Peripheral Nervous System"],
+  ["ADVANCED", "II.C.2.d.1.b.2", "II.C.2.d.1.b", "(2)", "Musculoskeletal: Muscular, Skeletal, Obesity, Chest Trauma"],
+  ["ADVANCED", "II.C.2.d.1.b.3", "II.C.2.d.1.b", "(3)", "Parenchymal: Atelectasis, Pneumonia, Interstitial Pneumonitis, Pulmonary Fibrosis, Respiratory Distress Syndrome (ARDS), Bronchopulmonary Dysplasia"],
+  ["ADVANCED", "II.C.2.d.1.b.4", "II.C.2.d.1.b", "(4)", "Pleural and Mediastinal: Pneumo -, Hemo-, and Chylothorax, Pleural Effusion, Empyema, Bronchopleural Fistula"],
+  ["ADVANCED", "II.C.2.d.1.b.5", "II.C.2.d.1.b", "(5)", "Other: Pain, Abdominal Distention"],
+  ["ADVANCED", "II.C.2.d.1.c", "II.C.2.d.1", "c)", "Management of the Patient with Respiratory Disease"],
+  ["ADVANCED", "II.C.2.d.1.c.1", "II.C.2.d.1.c", "(1)", "Evaluation: History and Physical Examination, Chest X-Ray, Arterial Blood Gases (ABGs), Pulmonary Function Tests (PFTs), Flow Volume Loops, Assessment of Perioperative Risk for Thoracic and Non-Thoracic Surgery"],
+  ["ADVANCED", "II.C.2.d.1.c.2", "II.C.2.d.1.c", "(2)", "Anesthetic Management"],
+  ["ADVANCED", "II.C.2.d.1.c.2.a", "II.C.2.d.1.c.2", "(a)", "Preoperative Preparation: Respiratory Therapy, Drug Therapy (Antibiotics, Bronchodilators, Mucolytics, Steroids), Tobacco Smoking Cessation (Techniques to Assist Patients, Benefits)"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b", "II.C.2.d.1.c.2", "(b)", "Intraoperative Management"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.1", "II.C.2.d.1.c.2.b", "(1)", "Monitoring"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.2", "II.C.2.d.1.c.2.b", "(2)", "Choice of Anesthesia"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.3", "II.C.2.d.1.c.2.b", "(3)", "Anesthetic Techniques:"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.3.a", "II.C.2.d.1.c.2.b.3", "(a)", "Nonpulmonary Surgery, Including Mediastinoscopy"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.3.b", "II.C.2.d.1.c.2.b.3", "(b)", "Thoracic and Pulmonary Surgery"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.3.c", "II.C.2.d.1.c.2.b.3", "(c)", "One-Lung Ventilation"],
+  ["ADVANCED", "II.C.2.d.1.c.2.b.3.d", "II.C.2.d.1.c.2.b.3", "(d)", "Thoracoscopy"],
+  ["ADVANCED", "II.C.2.d.1.c.2.c", "II.C.2.d.1.c.2", "(c)", "Postoperative Care: Pain Management, Respiratory Therapy, Ventilator Support, Extubation Criteria"],
+  ["ADVANCED", "II.C.2.d.1.c.3", "II.C.2.d.1.c", "(3)", "Management of Respiratory Failure"],
+  ["ADVANCED", "II.C.2.d.1.c.3.a", "II.C.2.d.1.c.3", "(a)", "Nonventilatory Respiratory Management: O 2 Therapy and Toxicity, Tracheobronchial Toilet, Positive Airway Pressure, Respiratory Drugs"],
+  ["ADVANCED", "II.C.2.d.1.c.3.b", "II.C.2.d.1.c.3", "(b)", "Ventilatory Management"],
+  ["ADVANCED", "II.C.2.d.1.c.3.b.1", "II.C.2.d.1.c.3.b", "(1)", "Criteria for Ventilatory Commitment and Weaning"],
+  ["ADVANCED", "II.C.2.d.1.c.3.b.2", "II.C.2.d.1.c.3.b", "(2)", "Mode of Ventilation: Conventional Mechanical Ventilation, PEEP, CPAP, IMV, SIMV, Pressure Support, Pressure Control, High Frequency Ventilation (Positive Pressure, Jet, Oscillation), Prone Ventilation, BIPAP, Airway Pressure-Release Ventilation"],
+  ["ADVANCED", "II.C.2.d.1.c.3.b.3", "II.C.2.d.1.c.3.b", "(3)", "Complications and Side Effects of Mechanical Ventilation: Volutrauma, Barotrauma, Biotrauma"],
+  ["ADVANCED", "II.C.2.d.1.c.3.b.4", "II.C.2.d.1.c.3.b", "(4)", "Management of Bronchospasm: Bronchodilator Drugs, Anti - Inflammatory Drugs, Acute and Chronic Management, Perioperative Management"],
+  ["ADVANCED", "II.C.2.d.1.c.3.c", "II.C.2.d.1.c.3", "(c)", "Other Management Adjuncts: Nitric Oxide, Steroids, Heliox"],
+  ["ADVANCED", "II.C.2.d.1.c.3.d", "II.C.2.d.1.c.3", "(d)", "Lung Transplantation: Anesthetic Implications"],
+  ["ADVANCED", "II.C.2.d.2", "II.C.2.d", "2)", "Sleep Apnea"],
+  ["ADVANCED", "II.C.2.d.2.a", "II.C.2.d.2", "a)", "Diagnosis: Sleep Study, STOP-BANG"],
+  ["ADVANCED", "II.C.2.d.2.b", "II.C.2.d.2", "b)", "Anesthetic Implications"],
+  ["ADVANCED", "II.C.3", "II.C", "3.", "Cardiovascular System"],
+  ["ADVANCED", "II.C.3.a", "II.C.3", "a.", "Normal Anatomy of Heart and Major Vessels"],
+  ["ADVANCED", "II.C.3.a.1", "II.C.3.a", "1)", "Echocardiographic Heart Anatomy: Chambers, Valves, Great Vessels, Pericardium, Basic Transesophageal Echocardiography (TEE) Views"],
+  ["ADVANCED", "II.C.3.a.2", "II.C.3.a", "2)", "Radiographic: Roentgenograms, CT, MRI"],
+  ["ADVANCED", "II.C.3.a.3", "II.C.3.a", "3)", "Other: Cardiac Catheterization"],
+  ["ADVANCED", "II.C.3.b", "II.C.3", "b.", "Clinical Sciences"],
+  ["ADVANCED", "II.C.3.b.1", "II.C.3.b", "1)", "Ischemic Heart Disease"],
+  ["ADVANCED", "II.C.3.b.1.a", "II.C.3.b.1", "a)", "Risk Factors; Predictors of Perioperative Risk, Modification of Perioperative Risk (e.g., Prophylactic Beta-Blockers)"],
+  ["ADVANCED", "II.C.3.b.1.b", "II.C.3.b.1", "b)", "Manifestations"],
+  ["ADVANCED", "II.C.3.b.1.c", "II.C.3.b.1", "c)", "Diagnosis of Myocardial Infarction and Acute Coronary Syndrome; Clinical, ECG, Enzymes, Echocardiography, Nuclear Techniques"],
+  ["ADVANCED", "II.C.3.b.1.d", "II.C.3.b.1", "d)", "Classification of types of MI (STEMI vs. demand)"],
+  ["ADVANCED", "II.C.3.b.1.e", "II.C.3.b.1", "e)", "Pharmacological Treatment of Angina, Thoracic Epidural for Angina, Interventional Cardiologic Techniques"],
+  ["ADVANCED", "II.C.3.b.1.f", "II.C.3.b.1", "f)", "Determinants of Myocardial Oxygen Requirements and Delivery, Silent Ischemia, Postoperative Ischemia"],
+  ["ADVANCED", "II.C.3.b.1.g", "II.C.3.b.1", "g)", "Perioperative Diagnosis and Treatment of Ischemia; ECG, TEE"],
+  ["ADVANCED", "II.C.3.b.1.h", "II.C.3.b.1", "h)", "Coronary Artery Bypass Procedures; Cardiopulmonary Bypass; Protamine Reactions"],
+  ["ADVANCED", "II.C.3.b.2", "II.C.3.b", "2)", "Valvular Heart Disease"],
+  ["ADVANCED", "II.C.3.b.2.a", "II.C.3.b.2", "a)", "Classification"],
+  ["ADVANCED", "II.C.3.b.2.b", "II.C.3.b.2", "b)", "Diagnosis (Including Echocardiography), Natural History, Surgical Management"],
+  ["ADVANCED", "II.C.3.b.2.c", "II.C.3.b.2", "c)", "Anesthetic Considerations"],
+  ["ADVANCED", "II.C.3.b.2.d", "II.C.3.b.2", "d)", "Subacute Bacterial Endocarditis Prophylaxis"],
+  ["ADVANCED", "II.C.3.b.3", "II.C.3.b", "3)", "Rhythm Disorders and Conduction Defects"],
+  ["ADVANCED", "II.C.3.b.3.a", "II.C.3.b.3", "a)", "Chronic Abnormalities: Etiology, Diagnosis, Therapy"],
+  ["ADVANCED", "II.C.3.b.3.a.1", "II.C.3.b.3.a", "(1)", "Automated Implantable Cardioverter/Defibrillator (AICD) Implantation"],
+  ["ADVANCED", "II.C.3.b.3.a.2", "II.C.3.b.3.a", "(2)", "Pacemakers: Permanent, Temporary, Transvenous, Transcutaneous; Ventricular Synchronization"],
+  ["ADVANCED", "II.C.3.b.3.a.3", "II.C.3.b.3.a", "(3)", "Ablations, Cryotherapy, Maze Procedure"],
+  ["ADVANCED", "II.C.3.b.3.b", "II.C.3.b.3", "b)", "Perioperative Dysrhythmia: Etiology, Diagnosis, Therapy"],
+  ["ADVANCED", "II.C.3.b.3.c", "II.C.3.b.3", "c)", "Perioperative Implications of Pacemaker and AICD"],
+  ["ADVANCED", "II.C.3.b.4", "II.C.3.b", "4)", "Heart Failure and Cardiomyopathy (Ischemic, Viral, Hypertrophic)"],
+  ["ADVANCED", "II.C.3.b.4.a", "II.C.3.b.4", "a)", "Definition and Functional Classification, Perioperative Diagnosis and Treatment"],
+  ["ADVANCED", "II.C.3.b.4.b", "II.C.3.b.4", "b)", "Compensatory Responses"],
+  ["ADVANCED", "II.C.3.b.4.c", "II.C.3.b.4", "c)", "Right or Left Ventricular Dysfunction"],
+  ["ADVANCED", "II.C.3.b.4.c.1", "II.C.3.b.4.c", "(1)", "Etiology"],
+  ["ADVANCED", "II.C.3.b.4.c.2", "II.C.3.b.4.c", "(2)", "Signs and Symptoms"],
+  ["ADVANCED", "II.C.3.b.4.c.3", "II.C.3.b.4.c", "(3)", "Diagnostic Tests"],
+  ["ADVANCED", "II.C.3.b.4.c.4", "II.C.3.b.4.c", "(4)", "Systolic vs. Diastolic Dysfunction"],
+  ["ADVANCED", "II.C.3.b.4.d", "II.C.3.b.4", "d)", "Treatment"],
+  ["ADVANCED", "II.C.3.b.4.d.1", "II.C.3.b.4.d", "(1)", "Pulmonary Edema"],
+  ["ADVANCED", "II.C.3.b.4.d.2", "II.C.3.b.4.d", "(2)", "Pulmonary Hypertension"],
+  ["ADVANCED", "II.C.3.b.4.d.3", "II.C.3.b.4.d", "(3)", "Cardiogenic Shock"],
+  ["ADVANCED", "II.C.3.b.4.e", "II.C.3.b.4", "e)", "Cardiac Transplantation"],
+  ["ADVANCED", "II.C.3.b.5", "II.C.3.b", "5)", "Cardiac Tamponade and Constrictive Pericarditis"],
+  ["ADVANCED", "II.C.3.b.5.a", "II.C.3.b.5", "a)", "Etiology"],
+  ["ADVANCED", "II.C.3.b.5.b", "II.C.3.b.5", "b)", "Diagnosis; TEE, PA Catheter"],
+  ["ADVANCED", "II.C.3.b.5.c", "II.C.3.b.5", "c)", "Anesthetic Management"],
+  ["ADVANCED", "II.C.3.b.6", "II.C.3.b", "6)", "Circulatory Assist"],
+  ["ADVANCED", "II.C.3.b.6.a", "II.C.3.b.6", "a)", "Cardiopulmonary Bypass"],
+  ["ADVANCED", "II.C.3.b.6.a.1", "II.C.3.b.6.a", "(1)", "Components (Pump, Oxygenator, Heat Exchanger, Filters)"],
+  ["ADVANCED", "II.C.3.b.6.a.2", "II.C.3.b.6.a", "(2)", "Cardiopulmonary Bypass Techniques"],
+  ["ADVANCED", "II.C.3.b.6.a.3", "II.C.3.b.6.a", "(3)", "Mechanisms of Gas Exchange"],
+  ["ADVANCED", "II.C.3.b.6.a.4", "II.C.3.b.6.a", "(4)", "Priming Solutions, Hemodilution"],
+  ["ADVANCED", "II.C.3.b.6.a.5", "II.C.3.b.6.a", "(5)", "Anticoagulation and Antagonism; Activated Clotting Time (ACT) and Other Clotting Times, Heparin Assays, Antithrombin III, Protamine Reactions, Heparin and Protamine Alternatives"],
+  ["ADVANCED", "II.C.3.b.6.a.6", "II.C.3.b.6.a", "(6)", "Prophylaxis with Aminocaproic Acid, Tranexamic Acid"],
+  ["ADVANCED", "II.C.3.b.6.a.7", "II.C.3.b.6.a", "(7)", "Anesthetic Considerations during Bypass"],
+  ["ADVANCED", "II.C.3.b.6.a.8", "II.C.3.b.6.a", "(8)", "Cooling and Warming, Deep Hypothermic Circulatory Arrest"],
+  ["ADVANCED", "II.C.3.b.6.a.9", "II.C.3.b.6.a", "(9)", "Monitoring, Blood Pressure Management"],
+  ["ADVANCED", "II.C.3.b.6.a.10", "II.C.3.b.6.a", "(10)", "Minimally Invasive Bypass Techniques"],
+  ["ADVANCED", "II.C.3.b.6.a.11", "II.C.3.b.6.a", "(11)", "Myocardial Preservation: Physiology, Techniques, Complications"],
+  ["ADVANCED", "II.C.3.b.6.a.12", "II.C.3.b.6.a", "(12)", "Preconditioning"],
+  ["ADVANCED", "II.C.3.b.6.b", "II.C.3.b.6", "b)", "Minimal Invasive Cardiac Surgery"],
+  ["ADVANCED", "II.C.3.b.6.b.1", "II.C.3.b.6.b", "(1)", "Off-Pump Coronary Artery Bypass (OPCAB)"],
+  ["ADVANCED", "II.C.3.b.6.b.2", "II.C.3.b.6.b", "(2)", "Minimally Invasive Direct Coronary Artery Bypass (MIDCAB)"],
+  ["ADVANCED", "II.C.3.b.6.b.3", "II.C.3.b.6.b", "(3)", "Percutaneous Valve Repair/Replacement"],
+  ["ADVANCED", "II.C.3.b.6.c", "II.C.3.b.6", "c)", "Intraaortic Balloon: Rationale, Indications, Limitations"],
+  ["ADVANCED", "II.C.3.b.6.d", "II.C.3.b.6", "d)", "Extracorporeal Membrane Oxygenat ion (ECMO)"],
+  ["ADVANCED", "II.C.3.b.6.d.1", "II.C.3.b.6.d", "1)", "Indications. Anesthetic Management"],
+  ["ADVANCED", "II.C.3.b.6.e", "II.C.3.b.6", "e)", "Ventricular Assist Devices"],
+  ["ADVANCED", "II.C.3.b.7", "II.C.3.b", "7)", "Pulmonary Embolism"],
+  ["ADVANCED", "II.C.3.b.7.a", "II.C.3.b.7", "a)", "Etiology: Blood, Air, Fat, Amniotic Fluid"],
+  ["ADVANCED", "II.C.3.b.7.b", "II.C.3.b.7", "b)", "Diagnosis, TEE Findings"],
+  ["ADVANCED", "II.C.3.b.7.c", "II.C.3.b.7", "c)", "Treatment; Acute, Preventive"],
+  ["ADVANCED", "II.C.3.b.8", "II.C.3.b", "8)", "Hypertension"],
+  ["ADVANCED", "II.C.3.b.8.a", "II.C.3.b.8", "a)", "Etiology, Pathophysiology, Course of Disease"],
+  ["ADVANCED", "II.C.3.b.8.b", "II.C.3.b.8", "b)", "Drug Treatment, Interactions with Anesthetics, Risk of Anesthesia"],
+  ["ADVANCED", "II.C.3.b.8.c", "II.C.3.b.8", "c)", "Intra- or Postoperative Hypertension; Differential Diagnosis and Treatment"],
+  ["ADVANCED", "II.C.3.b.9", "II.C.3.b", "9)", "Shock States: Anesthetic Management of Patient in Shock"],
+  ["ADVANCED", "II.C.3.b.10", "II.C.3.b", "10)", "Vascular Diseases"],
+  ["ADVANCED", "II.C.3.b.10.a", "II.C.3.b.10", "a)", "Cerebral Circulation; Luxury Perfusion, Steals, Infarcts, Intracranial Hemorrhage"],
+  ["ADVANCED", "II.C.3.b.10.b", "II.C.3.b.10", "b)", "Carotid Endarterectomy: Anesthetic Management, Monitoring of Cerebral Perfusion, Complications"],
+  ["ADVANCED", "II.C.3.b.10.c", "II.C.3.b.10", "c)", "Abdominal Aneurysm Resection: Anesthetic Management"],
+  ["ADVANCED", "II.C.3.b.10.d", "II.C.3.b.10", "d)", "Peripheral Arteriosclerotic Disease"],
+  ["ADVANCED", "II.C.3.b.10.e", "II.C.3.b.10", "e)", "Aneurysms of Ascending, Descending and Arch of Aorta, Thoracoabdominal Aneurysms, Including Endovascular Repair Techniques"],
+  ["ADVANCED", "II.C.3.b.11", "II.C.3.b", "11)", "Advanced Cardiopulmonary Resuscitation"],
+  ["ADVANCED", "II.C.3.b.11.a", "II.C.3.b.11", "a)", "Recognition"],
+  ["ADVANCED", "II.C.3.b.11.b", "II.C.3.b.11", "b)", "Adult Management: Drugs, Defibrillators, Monitors, Advanced Cardiac Life Support (ACLS) Algorithms"],
+  ["ADVANCED", "II.C.3.b.11.c", "II.C.3.b.11", "c)", "Complications and Outcomes of Therapy"],
+  ["ADVANCED", "II.C.3.b.11.d", "II.C.3.b.11", "d)", "Pediatric Management: Drugs, Defibrillators, Monitors, Advanced Cardiac Life Support (ACLS) Algorithms"],
+  ["ADVANCED", "II.C.4", "II.C", "4.", "Gastrointestinal/Hepatic Systems"],
+  ["ADVANCED", "II.C.4.a", "II.C.4", "a.", "Biochemistry: Nutrition"],
+  ["ADVANCED", "II.C.4.a.1", "II.C.4.a", "1)", "Parenteral: Peripheral or Central Vein, Hyperalimentation, Solutions Used and Complications, Anesthetic Implications"],
+  ["ADVANCED", "II.C.4.a.2", "II.C.4.a", "2)", "Enteral: GI Elemental Diets, Routes of Delivery, Complications, Anesthetic Implications"],
+  ["ADVANCED", "II.C.4.b", "II.C.4", "b.", "Clinical Science"],
+  ["ADVANCED", "II.C.4.b.1", "II.C.4.b", "1)", "Morbid Obesity/Anesthesia for Bariatric Surgery"],
+  ["ADVANCED", "II.C.4.b.1.a", "II.C.4.b.1", "a)", "Pre-Anesthetic Evaluation and Management"],
+  ["ADVANCED", "II.C.4.b.1.b", "II.C.4.b.1", "b)", "Pharmacologic Considerations"],
+  ["ADVANCED", "II.C.4.b.1.c", "II.C.4.b.1", "c)", "Anesthetic Management (Airway, Ventilation, Monitoring, Venous Access)"],
+  ["ADVANCED", "II.C.4.b.1.d", "II.C.4.b.1", "d)", "Postoperative Management (Ventilation, Analgesia)"],
+  ["ADVANCED", "II.C.4.b.2", "II.C.4.b", "2)", "Hepatic Disease"],
+  ["ADVANCED", "II.C.4.b.2.a", "II.C.4.b.2", "a)", "Preoperative Laboratory Assessment"],
+  ["ADVANCED", "II.C.4.b.2.b", "II.C.4.b.2", "b)", "Anesthesia Choice (Hepatocellular Disease, Ascites, Portal Hypertension)"],
+  ["ADVANCED", "II.C.4.b.2.c", "II.C.4.b.2", "c)", "Postoperative Hepatic Dysfunction, Hepatic Failure, Hepatorenal Syndrome"],
+  ["ADVANCED", "II.C.4.b.2.d", "II.C.4.b.2", "d)", "Hepatic Transplantation"],
+  ["ADVANCED", "II.C.4.b.3", "II.C.4.b", "3)", "Intestinal Obstruction"],
+  ["ADVANCED", "II.C.4.b.3.a", "II.C.4.b.3", "a)", "Causes; Paralytic Ileus; Mechanical; Vascular"],
+  ["ADVANCED", "II.C.4.b.3.b", "II.C.4.b.3", "b)", "Physiological Changes; Fluid and Electrolyte; Respiratory"],
+  ["ADVANCED", "II.C.4.b.3.c", "II.C.4.b.3", "c)", "Anesthesia Management: Full Stomach; Fluid Therapy; Nitrous Oxide"],
+  ["ADVANCED", "II.C.4.b.4", "II.C.4.b", "4)", "Anesthesia for Upper and Lower GI Endoscopy"],
+  ["ADVANCED", "II.C.4.b.5", "II.C.4.b", "5)", "Antiemetics and Aspiration Prophylaxis: Phenothiazines; Butyrophenones; Metoclopramide; Anticholinergics; Serotonin Antagonists, Antihistamines (H1 Blockers, H2 Blockers, Mixed Blockers), Antacids, Proton Pump Inhibitors"],
+  ["ADVANCED", "II.C.5", "II.C", "5.", "Renal and Urinary Systems/Electrolyte Balance: Clinical Science"],
+  ["ADVANCED", "II.C.5.a", "II.C.5", "a.", "Renal Disease"],
+  ["ADVANCED", "II.C.5.a.1", "II.C.5.a", "1)", "Pathophysiology of Renal Disease; Risk Factors for Acute Renal Failure"],
+  ["ADVANCED", "II.C.5.a.2", "II.C.5.a", "2)", "Anesthetic Choice in Reduced Renal Function"],
+  ["ADVANCED", "II.C.5.a.3", "II.C.5.a", "3)", "Anesthetic Management in Renal Failure, Arteriovenous (A-V) Shunts"],
+  ["ADVANCED", "II.C.5.a.4", "II.C.5.a", "4)", "Anesthetic Management in Renal Transplantation"],
+  ["ADVANCED", "II.C.5.a.5", "II.C.5.a", "5)", "Perioperative Oliguria and Anuria"],
+  ["ADVANCED", "II.C.5.a.6", "II.C.5.a", "6)", "Dialysis and Hemofiltration: Hemodialysis, Peritoneal Dial ysis, Continuous Hemofiltration (Arteriovenous, Venovenous)"],
+  ["ADVANCED", "II.C.5.a.7", "II.C.5.a", "7)", "Pharmacologic Prevention and Treatment of Renal Failure"],
+  ["ADVANCED", "II.C.5.b", "II.C.5", "b.", "Urologic Surgery: Lithotripsy, Transurethral Resection of Prostate (TURP)/Irrigating Fluids/Hyponatremia"],
+  ["ADVANCED", "II.C.5.c", "II.C.5", "c.", "Perioperative Electrolyte Abnormalities"],
+  ["ADVANCED", "II.C.5.d", "II.C.5", "d.", "Fluid Therapy and Fluid Homeostasis"],
+  ["ADVANCED", "II.C.5.d.1", "II.C.5.d", "1)", "Fluid Balance during Surgery; Role of the Endothelial Glycocalyx"],
+  ["ADVANCED", "II.C.5.d.2", "II.C.5.d", "2)", "Assessment of Fluid Responsiveness and Goal-Directed Therapies"],
+  ["ADVANCED", "II.C.5.d.2.a", "II.C.5.d.2", "a)", "Esophageal Doppler, Pulse Pressure Variation, Pulse Contour Analysis"],
+  ["ADVANCED", "II.C.5.d.2.b", "II.C.5.d.2", "b)", "Fluid Replacement Strategies and Controversies"],
+  ["ADVANCED", "II.C.6", "II.C", "6.", "Hematologic System"],
+  ["ADVANCED", "II.C.6.a", "II.C.6", "a.", "Clinical Science"],
+  ["ADVANCED", "II.C.6.a.1", "II.C.6.a", "1)", "Hematologic Disorders"],
+  ["ADVANCED", "II.C.6.a.1.a", "II.C.6.a.1", "a)", "Diseases of Blood"],
+  ["ADVANCED", "II.C.6.a.1.a.1", "II.C.6.a.1.a", "(1)", "Anemias; Compensatory Mechanisms"],
+  ["ADVANCED", "II.C.6.a.1.a.2", "II.C.6.a.1.a", "(2)", "Polycythemias; Primary vs. Secondary"],
+  ["ADVANCED", "II.C.6.a.1.a.3", "II.C.6.a.1.a", "(3)", "Clotting Disorders"],
+  ["ADVANCED", "II.C.6.a.1.a.3.a", "II.C.6.a.1.a.3", "(a)", "Thrombocytopenia and Thrombocytopathy"],
+  ["ADVANCED", "II.C.6.a.1.a.3.b", "II.C.6.a.1.a.3", "(b)", "Congenital and Acquired Factor Deficiencies"],
+  ["ADVANCED", "II.C.6.a.1.a.3.c", "II.C.6.a.1.a.3", "(c)", "Disseminated Intravascular Coagulation"],
+  ["ADVANCED", "II.C.6.a.1.a.3.d", "II.C.6.a.1.a.3", "(d)", "Fibrinolysis"],
+  ["ADVANCED", "II.C.6.a.1.a.3.e", "II.C.6.a.1.a.3", "(e)", "Pharmacologic: Anticoagulants and Antagonists"],
+  ["ADVANCED", "II.C.6.a.1.a.4", "II.C.6.a.1.a", "(4)", "Hemoglobinopathies, Porphyrias"],
+  ["ADVANCED", "II.C.6.b", "II.C.6", "b)", "Advanced Transfusion Therapy: Indications, Reactions"],
+  ["ADVANCED", "II.C.6.b.1", "II.C.6.b", "1)", "Febrile"],
+  ["ADVANCED", "II.C.6.b.2", "II.C.6.b", "2)", "Allergic"],
+  ["ADVANCED", "II.C.6.b.3", "II.C.6.b", "3)", "Hemolytic: Acute and Delayed"],
+  ["ADVANCED", "II.C.6.c", "II.C.6", "c)", "Complications of Transfusions"],
+  ["ADVANCED", "II.C.6.c.1", "II.C.6.c", "1)", "Infections: Hepatitis, Human Immunodeficiency Virus (HIV), Cytomegalovirus (CMV), Others"],
+  ["ADVANCED", "II.C.6.c.2", "II.C.6.c", "2)", "Citrate Intoxication"],
+  ["ADVANCED", "II.C.6.c.3", "II.C.6.c", "3)", "Electrolyte and Acid Base Abnormalities"],
+  ["ADVANCED", "II.C.6.c.4", "II.C.6.c", "4)", "Pulmonary"],
+  ["ADVANCED", "II.C.6.c.4.a", "II.C.6.c.4", "a)", "Transfusion-Related Acute Lung Injury"],
+  ["ADVANCED", "II.C.6.c.4.b", "II.C.6.c.4", "b)", "Transfusion-Related Circulatory Overload"],
+  ["ADVANCED", "II.C.6.c.5", "II.C.6.c", "5)", "Immunosuppression, Graft vs. Host Disease"],
+  ["ADVANCED", "II.C.6.d", "II.C.6", "d)", "Transfusion Therapy for Massive Hemorrhage"],
+  ["ADVANCED", "II.C.6.d.1", "II.C.6.d", "1)", "Massive Transfusion Protocol"],
+  ["ADVANCED", "II.C.6.d.1.a", "II.C.6.d.1", "a)", "Ratios of RBC and Plasma"],
+  ["ADVANCED", "II.C.6.d.1.b", "II.C.6.d.1", "b)", "Use of Uncrossmatched Products"],
+  ["ADVANCED", "II.C.6.d.1.c", "II.C.6.d.1", "c)", "Adjuvant Therapies: Antifibrinolytics, Calcium, etc."],
+  ["ADVANCED", "II.C.6.d.2", "II.C.6.d", "2)", "Coagulopathy of Hemorrhagic Shock"],
+  ["ADVANCED", "II.C.7", "II.C", "7.", "Endocrine and Metabolic Systems: Clinical Science"],
+  ["ADVANCED", "II.C.7.a", "II.C.7", "a.", "Pituitary Disease"],
+  ["ADVANCED", "II.C.7.a.1", "II.C.7.a", "1)", "Hypopituitarism, Pituitary Removal: Substitution Therapy"],
+  ["ADVANCED", "II.C.7.a.1.a", "II.C.7.a.1", "a)", "Panhypopituitarism"],
+  ["ADVANCED", "II.C.7.a.1.b", "II.C.7.a.1", "b)", "Diabetes Insipidus"],
+  ["ADVANCED", "II.C.7.a.2", "II.C.7.a", "2)", "Hyperpituitarism"],
+  ["ADVANCED", "II.C.7.a.2.a", "II.C.7.a.2", "a)", "Acromegaly, Including Airway Management"],
+  ["ADVANCED", "II.C.7.a.2.b", "II.C.7.a.2", "b)", "Inappropriate ADH Secretion"],
+  ["ADVANCED", "II.C.7.b", "II.C.7", "b.", "Thyroid Disease"],
+  ["ADVANCED", "II.C.7.b.1", "II.C.7.b", "1)", "Hyperthyroidism"],
+  ["ADVANCED", "II.C.7.b.1.a", "II.C.7.b.1", "a)", "Metabolic and Circulatory Effects"],
+  ["ADVANCED", "II.C.7.b.1.b", "II.C.7.b.1", "b)", "Anesthetic Management"],
+  ["ADVANCED", "II.C.7.b.1.c", "II.C.7.b.1", "c)", "Thyroid Storm"],
+  ["ADVANCED", "II.C.7.b.2", "II.C.7.b", "2)", "Hypothyroidism"],
+  ["ADVANCED", "II.C.7.b.2.a", "II.C.7.b.2", "a)", "Metabolic and Circulatory Effects, Myxedema Coma"],
+  ["ADVANCED", "II.C.7.b.2.b", "II.C.7.b.2", "b)", "Substitution Therapy"],
+  ["ADVANCED", "II.C.7.b.2.c", "II.C.7.b.2", "c)", "Anesthetic Implications"],
+  ["ADVANCED", "II.C.7.b.3", "II.C.7.b", "3)", "Complications of Surgery: Hypocalcemia, Recurrent Laryngeal Nerve Injury, Diagnosis and Treatment"],
+  ["ADVANCED", "II.C.7.c", "II.C.7", "c.", "Parathyroid Disease"],
+  ["ADVANCED", "II.C.7.c.1", "II.C.7.c", "1)", "Hyperparathyroidism; Physiological Effects"],
+  ["ADVANCED", "II.C.7.c.2", "II.C.7.c", "2)", "Hypoparathyroidism; Postoperative Manifestations and Treatment"],
+  ["ADVANCED", "II.C.7.d", "II.C.7", "d.", "Adrenal Disease"],
+  ["ADVANCED", "II.C.7.d.1", "II.C.7.d", "1)", "Cushing Syndrome"],
+  ["ADVANCED", "II.C.7.d.2", "II.C.7.d", "2)", "Primary Aldosteronism"],
+  ["ADVANCED", "II.C.7.d.3", "II.C.7.d", "3)", "Addison Disease"],
+  ["ADVANCED", "II.C.7.d.4", "II.C.7.d", "4)", "Pheochromocytoma"],
+  ["ADVANCED", "II.C.7.d.4.a", "II.C.7.d.4", "a)", "Circulatory and Metabolic Manifestations"],
+  ["ADVANCED", "II.C.7.d.4.b", "II.C.7.d.4", "b)", "Diagnosis"],
+  ["ADVANCED", "II.C.7.d.4.c", "II.C.7.d.4", "c)", "Anesthetic Management"],
+  ["ADVANCED", "II.C.7.e", "II.C.7", "e.", "Carcinoid Syndrome"],
+  ["ADVANCED", "II.C.7.f", "II.C.7", "f.", "Diabetes Mellitus"],
+  ["ADVANCED", "II.C.7.f.1", "II.C.7.f", "1)", "Pathophysiology"],
+  ["ADVANCED", "II.C.7.f.2", "II.C.7.f", "2)", "Control of Blood Glucose - Hypoglycemia; Hyperglycemia and Ketoacidosis"],
+  ["ADVANCED", "II.C.7.f.3", "II.C.7.f", "3)", "Elective Anesthesia - Perioperative Management"],
+  ["ADVANCED", "II.C.7.f.4", "II.C.7.f", "4)", "Emergency Anesthesia"],
+  ["ADVANCED", "II.C.7.f.5", "II.C.7.f", "5)", "Hyperosmolar Coma"],
+  ["ADVANCED", "II.C.7.f.6", "II.C.7.f", "6)", "Pancreas Transplantation"],
+  ["ADVANCED", "II.C.8", "II.C", "8.", "Neuromuscular Diseases and Disorders: Clinical Science"],
+  ["ADVANCED", "II.C.8.a", "II.C.8", "a.", "Demyelinating Diseases"],
+  ["ADVANCED", "II.C.8.a.1", "II.C.8.a", "1)", "Multiple Sclerosis"],
+  ["ADVANCED", "II.C.8.a.2", "II.C.8.a", "2)", "Motor Neuron Diseases: Amyotrophic Lateral Sclerosis, Spinobulbar Muscular Atrophy, Hereditary Spastic Paraplegia"],
+  ["ADVANCED", "II.C.8.a.3", "II.C.8.a", "3)", "Guillain-Barre Syndrome"],
+  ["ADVANCED", "II.C.8.a.4", "II.C.8.a", "4)", "Charcot-Marie-Tooth Disease"],
+  ["ADVANCED", "II.C.8.b", "II.C.8", "b.", "Primary Muscle Diseases"],
+  ["ADVANCED", "II.C.8.b.1", "II.C.8.b", "1)", "Muscular Dystrophies: Duchenne’s, Becker’s, Limb-Girdle"],
+  ["ADVANCED", "II.C.8.b.2", "II.C.8.b", "2)", "Mitochondrial Myopathies"],
+  ["ADVANCED", "II.C.8.c", "II.C.8", "c.", "Myasthenic Syndromes"],
+  ["ADVANCED", "II.C.8.c.1", "II.C.8.c", "1)", "Myasthenia Gravis"],
+  ["ADVANCED", "II.C.8.c.2", "II.C.8.c", "2)", "Lambert-Eaton Myasthenic Syndrome"],
+  ["ADVANCED", "II.C.8.c.3", "II.C.8.c", "3)", "Congenital Myasthenic Syndromes"],
+  ["ADVANCED", "II.C.8.d", "II.C.8", "d.", "Ion Channel Myotonias"],
+  ["ADVANCED", "II.C.8.d.1", "II.C.8.d", "1)", "Dystrophic: Congenital Myotonic Dystrophy"],
+  ["ADVANCED", "II.C.8.d.2", "II.C.8.d", "2)", "Nondystrophic: Myotonia Congenita, Becker Disease, Hyperkalemic Periodic Paralysis, Paramyotonia Congenita, Hypoka lemic Periodic Paralysis"],
+  ["ADVANCED", "II.D", null, "D.", "Clinical Subspecialties"],
+  ["ADVANCED", "II.D.1", "II.D", "1.", "Painful Disease States"],
+  ["ADVANCED", "II.D.1.a", "II.D.1", "a.", "Pathophysiology"],
+  ["ADVANCED", "II.D.1.a.1", "II.D.1.a", "1)", "Acute Pain"],
+  ["ADVANCED", "II.D.1.a.2", "II.D.1.a", "2)", "Cancer-Related Pain"],
+  ["ADVANCED", "II.D.1.a.3", "II.D.1.a", "3)", "Chronic Pain States"],
+  ["ADVANCED", "II.D.1.a.3.a", "II.D.1.a.3", "a)", "Acute and Chronic Neck and Low Back Pain"],
+  ["ADVANCED", "II.D.1.a.3.b", "II.D.1.a.3", "b)", "Neuropathic Pain States"],
+  ["ADVANCED", "II.D.1.a.3.b.1", "II.D.1.a.3.b", "(1)", "Complex Regional Pain Syndrome, Types I and II"],
+  ["ADVANCED", "II.D.1.a.3.b.2", "II.D.1.a.3.b", "(2)", "Postherpetic Neuralgia"],
+  ["ADVANCED", "II.D.1.a.3.b.3", "II.D.1.a.3.b", "(3)", "Phantom Limb, Post-Stroke"],
+  ["ADVANCED", "II.D.1.a.3.b.4", "II.D.1.a.3.b", "(4)", "Peripheral Neuropathies (e.g., Diabetic Neuropathy)"],
+  ["ADVANCED", "II.D.1.a.3.c", "II.D.1.a.3", "c)", "Somatic Pain Conditions: Myofascial Pain, Facet Arthropathy, etc."],
+  ["ADVANCED", "II.D.1.a.3.d", "II.D.1.a.3", "d)", "Sickle Cell Anemia"],
+  ["ADVANCED", "II.D.1.b", "II.D.1", "b.", "Treatment"],
+  ["ADVANCED", "II.D.1.b.1", "II.D.1.b", "1)", "Acute Postoperative and Posttraumatic Pain"],
+  ["ADVANCED", "II.D.1.b.1.a", "II.D.1.b.1", "a)", "Postoperative Epidural Analgesia"],
+  ["ADVANCED", "II.D.1.b.1.b", "II.D.1.b.1", "b)", "Neuraxial Opioids"],
+  ["ADVANCED", "II.D.1.b.1.c", "II.D.1.b.1", "c)", "Peripheral Nerve Blockade and Catheters to Treat Postoperative and Posttraumatic Pain"],
+  ["ADVANCED", "II.D.1.b.1.d", "II.D.1.b.1", "d)", "Patient-Controlled Analgesia"],
+  ["ADVANCED", "II.D.1.b.1.e", "II.D.1.b.1", "e)", "Other Modalities, Multimodal Analgesia (Nonsteroidal Analgesics, Electrical Stimulation, Acupuncture, Ketamine, etc.)"],
+  ["ADVANCED", "II.D.1.b.2", "II.D.1.b", "2)", "Cancer-Related Pain"],
+  ["ADVANCED", "II.D.1.b.2.a", "II.D.1.b.2", "a)", "Systemic Medications"],
+  ["ADVANCED", "II.D.1.b.2.b", "II.D.1.b.2", "b)", "Continuous Spinal and Epidural Analgesia"],
+  ["ADVANCED", "II.D.1.b.2.c", "II.D.1.b.2", "c)", "Neurolytic and Non-Neurolytic Blocks to Treat Cancer Pain"],
+  ["ADVANCED", "II.D.1.b.2.d", "II.D.1.b.2", "d)", "World Health Organization Analgesic Ladder"],
+  ["ADVANCED", "II.D.1.b.3", "II.D.1.b", "3)", "Chronic Pain (Non-Cancer-Related)"],
+  ["ADVANCED", "II.D.1.b.3.a", "II.D.1.b.3", "a)", "Systemic Medications: Nonsteroidal Anti-Inflammatory Drugs (NSAIDs), Opioid Analgesics, Anti-Epileptics, Antidepressants"],
+  ["ADVANCED", "II.D.1.b.3.b", "II.D.1.b.3", "b)", "Spinal and Epidural Analgesia"],
+  ["ADVANCED", "II.D.1.b.3.c", "II.D.1.b.3", "c)", "Use of Peripheral Nerve Blocks to Treat Chronic Pain"],
+  ["ADVANCED", "II.D.1.b.3.d", "II.D.1.b.3", "d)", "Use of Sympathetic Nerve Blocks to Treat Chronic Pain"],
+  ["ADVANCED", "II.D.1.b.3.e", "II.D.1.b.3", "e)", "Other Techniques: TENS, Spinal Cord Stimulation, Neuroablation (Surgical and Chemical Neurolysis)"],
+  ["ADVANCED", "II.D.2", "II.D", "2.", "Pediatric Anesthesia"],
+  ["ADVANCED", "II.D.2.a", "II.D.2", "a.", "Apparatus: Breathing Circuits (Advantages/Disadvantages, Dead Space, etc.), Humidity, Thermal Control"],
+  ["ADVANCED", "II.D.2.a.1", "II.D.2.a", "1)", "Endotracheal Tube Selection (Cuffed vs. Uncuffed) and Sizing"],
+  ["ADVANCED", "II.D.2.a.2", "II.D.2.a", "2)", "Warming Devices: Types, Efficacy, Complications"],
+  ["ADVANCED", "II.D.2.b", "II.D.2", "b.", "Premedication: Drugs; Dosage; Routes; Vehicles, Including Topical Anesthetics; Parental Presence"],
+  ["ADVANCED", "II.D.2.c", "II.D.2", "c.", "Agents and Techniques"],
+  ["ADVANCED", "II.D.2.c.1", "II.D.2.c", "1)", "Induction Techniques"],
+  ["ADVANCED", "II.D.2.c.2", "II.D.2.c", "2)", "Anesthetics: Actions Different From Adults"],
+  ["ADVANCED", "II.D.2.c.2.a", "II.D.2.c.2", "a)", "Drug Toxicities Preferentially Occurring in Children (e.g., Propofol)"],
+  ["ADVANCED", "II.D.2.c.2.b", "II.D.2.c.2", "b)", "Opioid Dosing and Sensitivity"],
+  ["ADVANCED", "II.D.2.c.2.c", "II.D.2.c.2", "c)", "Neuromuscular Blockers (Sensitivity, Congenital Diseases, Complications of Succinylcholine, Age-Related and Drug-Related Pharmacodynamics and Pharmacokinetics)"],
+  ["ADVANCED", "II.D.2.c.2.d", "II.D.2.c.2", "d)", "Regional Anesthesia"],
+  ["ADVANCED", "II.D.2.d", "II.D.2", "d.", "Fluid Therapy and Blood Replacement, Physiologic Anemia, Glucose Requirements"],
+  ["ADVANCED", "II.D.2.d.1", "II.D.2.d", "1)", "NPO Guidelines for Pediatric Patients"],
+  ["ADVANCED", "II.D.2.e", "II.D.2", "e.", "Problems in Intubation and Extubation (Full Stomach, Diaphragmatic Hernia, Tracheoesophageal (TEF) Fistula, Pierre-Robin, Treacher-Collins, Crouzon, Goldenhar, Hurler, Awake/Fiberoptic Intubation, Dentition, Laryngospasm, Stridor)"],
+  ["ADVANCED", "II.D.2.f", "II.D.2", "f.", "Neonatal Physiology"],
+  ["ADVANCED", "II.D.2.f.1", "II.D.2.f", "1)", "Respiratory"],
+  ["ADVANCED", "II.D.2.f.1.a", "II.D.2.f.1", "a)", "Development, Anatomy, Surfactant"],
+  ["ADVANCED", "II.D.2.f.1.b", "II.D.2.f.1", "b)", "Pulmonary Oxygen Toxicity"],
+  ["ADVANCED", "II.D.2.f.1.c", "II.D.2.f.1", "c)", "Pulmonary Function"],
+  ["ADVANCED", "II.D.2.f.1.d", "II.D.2.f.1", "d)", "Lung Volumes vs. Adult"],
+  ["ADVANCED", "II.D.2.f.1.e", "II.D.2.f.1", "e)", "Airway Differences, Infant vs. Adult"],
+  ["ADVANCED", "II.D.2.f.2", "II.D.2.f", "2)", "Cardiovascular"],
+  ["ADVANCED", "II.D.2.f.2.a", "II.D.2.f.2", "a)", "Transition, Fetal to Adult"],
+  ["ADVANCED", "II.D.2.f.2.b", "II.D.2.f.2", "b)", "Persistent Fetal Circulation"],
+  ["ADVANCED", "II.D.2.f.3", "II.D.2.f", "3)", "Retinopathy of Prematurity: Anesthetic Implications"],
+  ["ADVANCED", "II.D.2.f.4", "II.D.2.f", "4)", "Metabolism, Fluid Distribution and Renal Function"],
+  ["ADVANCED", "II.D.2.f.5", "II.D.2.f", "5)", "Thermal Regulation (Neutral Temperature, Nonshivering Thermogenesis)"],
+  ["ADVANCED", "II.D.2.f.6", "II.D.2.f", "6)", "Fetal Hemoglobin"],
+  ["ADVANCED", "II.D.2.f.7", "II.D.2.f", "7)", "Prematurity, Apnea of Prematurity"],
+  ["ADVANCED", "II.D.2.f.8", "II.D.2.f", "8)", "Bronchopulmonary Dysplasia"],
+  ["ADVANCED", "II.D.2.g", "II.D.2", "g.", "Congenital Heart and Major Vascular Disease"],
+  ["ADVANCED", "II.D.2.g.1", "II.D.2.g", "1)", "Cyanotic Defects"],
+  ["ADVANCED", "II.D.2.g.2", "II.D.2.g", "2)", "Acyanotic Defects"],
+  ["ADVANCED", "II.D.2.g.3", "II.D.2.g", "3)", "Primary Pulmonary Hypertension"],
+  ["ADVANCED", "II.D.2.g.4", "II.D.2.g", "4)", "Major Vascular Malformations: Coarctation, Persistent Patent Ductus Arteriosus, Vascular Rings"],
+  ["ADVANCED", "II.D.2.g.5", "II.D.2.g", "5)", "Altered Uptake/Distribution of IV and Inhalation Anesthetics"],
+  ["ADVANCED", "II.D.2.g.6", "II.D.2.g", "6)", "Anesthetic Considerations"],
+  ["ADVANCED", "II.D.2.g.6.a", "II.D.2.g.6", "a)", "Cardiac Surgery; Corrective and Palliative"],
+  ["ADVANCED", "II.D.2.g.6.b", "II.D.2.g.6", "b)", "Noncardiac Surgery"],
+  ["ADVANCED", "II.D.2.g.6.c", "II.D.2.g.6", "c)", "Chronic Congenital Heart Disease, Corrected, Uncorrected, and Palliated"],
+  ["ADVANCED", "II.D.2.g.6.c.1", "II.D.2.g.6.c", "(1)", "In Childhood Beyond the Newborn and Infant Periods"],
+  ["ADVANCED", "II.D.2.g.6.c.2", "II.D.2.g.6.c", "(2)", "In Adulthood"],
+  ["ADVANCED", "II.D.2.h", "II.D.2", "h.", "Emergencies in the Newborn"],
+  ["ADVANCED", "II.D.2.h.1", "II.D.2.h", "1)", "Diaphragmatic Hernia"],
+  ["ADVANCED", "II.D.2.h.2", "II.D.2.h", "2)", "Tracheoesophageal Fistula and Esophageal Atresia"],
+  ["ADVANCED", "II.D.2.h.3", "II.D.2.h", "3)", "Neonatal Lobar Emphysema"],
+  ["ADVANCED", "II.D.2.h.4", "II.D.2.h", "4)", "Pyloric Stenosis"],
+  ["ADVANCED", "II.D.2.h.5", "II.D.2.h", "5)", "Necrotizing Enterocolitis"],
+  ["ADVANCED", "II.D.2.h.6", "II.D.2.h", "6)", "Omphalocele/Gastroschisis"],
+  ["ADVANCED", "II.D.2.h.7", "II.D.2.h", "7)", "Respiratory Distress Syndrome: Etiology, Management, Ventilation Techniques"],
+  ["ADVANCED", "II.D.2.h.8", "II.D.2.h", "8)", "Myelomeningocele"],
+  ["ADVANCED", "II.D.2.i", "II.D.2", "i.", "Pediatric Medical Problems with Anesthetic Implications"],
+  ["ADVANCED", "II.D.2.i.1", "II.D.2.i", "1)", "Respiratory: Upper Respiratory Infections (Colds, Epiglottitis, Laryngotracheobronchitis), Bronchopulmonary Dysplasia, Cystic Fibrosis"],
+  ["ADVANCED", "II.D.2.i.2", "II.D.2.i", "2)", "Musculoskeletal: Muscular Dystrophies, Myotonias, etc."],
+  ["ADVANCED", "II.D.2.i.3", "II.D.2.i", "3)", "Developmental Delay, Cerebral Palsy, Autism"],
+  ["ADVANCED", "II.D.2.i.4", "II.D.2.i", "4)", "Childhood Obesity"],
+  ["ADVANCED", "II.D.2.i.5", "II.D.2.i", "5)", "Endocrine Diseases: Childhood Diabetes, Congenital Adrenal Hyperplasia, etc."],
+  ["ADVANCED", "II.D.2.i.6", "II.D.2.i", "6)", "Skeletal Abnormalities with or without Systemic Implications: Klippel-Feil, Achondroplasia, Marfan, Morquio, Osteogenesis Imperfect a"],
+  ["ADVANCED", "II.D.2.i.7", "II.D.2.i", "7)", "Trisomy 21 and Other Chromosomal Abnormalities"],
+  ["ADVANCED", "II.D.2.i.8", "II.D.2.i", "8)", "Juvenile Rheumatoid Arthritis"],
+  ["ADVANCED", "II.D.2.i.9", "II.D.2.i", "9)", "Anemias: Congenital and Acquired: Iron Deficiency, Physiologic Anemia, Sickle Cell, Thalassemia, etc."],
+  ["ADVANCED", "II.D.2.i.10", "II.D.2.i", "10)", "Malignant Hyperthermia in Children; Susceptibility, Associated Diseases, Anesthetic Management of MH Susceptibility, Intraoperative Diagnosis, Treatment"],
+  ["ADVANCED", "II.D.2.j", "II.D.2", "j.", "Anesthetic Implications for Common Non-Neonatal Pediatric Subspecialty Surgery"],
+  ["ADVANCED", "II.D.2.j.1", "II.D.2.j", "1)", "Otolaryngology: Cleft Lip and Palate, Tonsillectomy and Adenoidectomy, Common Ear Procedures, Peritonsillar Abscess, Flexible and Rigid Bronchoscopy, Diagnostic and Therapeutic Laryngoscopy Techniques (Jet Ventilation, Laser Implications), Airway Foreign Bodies"],
+  ["ADVANCED", "II.D.2.j.2", "II.D.2.j", "2)", "Neurosurgery: Craniotomies for Tumor or Vascular Malformations, Hydrocephalus, Ventriculoperitoneal Shunts, Craniofacial Procedures, Tethered Spinal Cord, Halo Placement Implications"],
+  ["ADVANCED", "II.D.2.j.3", "II.D.2.j", "3)", "Thoracic Surgery: Anterior Mediastinal Mass, Lung Isolation Techniques, Pectus Excavatum and Carinatum"],
+  ["ADVANCED", "II.D.2.j.4", "II.D.2.j", "4)", "General and Urologic Surgery: Laparotomy vs. Laparoscopy, Bowel Surgery, Urologic Surgery (Wilms Tumor, Ureteral Reimplantation, Bladder and Urethral Malformations, Neuroblastoma)"],
+  ["ADVANCED", "II.D.2.j.5", "II.D.2.j", "5)", "Orthopedic Surgery: Fractures and Dislocations, Congenital Hip Dysplasia, Foot and Hand Malformations; Scoliosis Implications and Repair"],
+  ["ADVANCED", "II.D.2.j.6", "II.D.2.j", "6)", "Ophthalmologic: Strabismus, Cataract, Glaucoma Procedures, etc."],
+  ["ADVANCED", "II.D.2.k", "II.D.2", "k.", "Outpatient Pediatric Anesthesia"],
+  ["ADVANCED", "II.D.2.k.1", "II.D.2.k", "1)", "Indications and Contraindications"],
+  ["ADVANCED", "II.D.2.k.2", "II.D.2.k", "2)", "Anesthetic Considerations: Premedication, Induction, Maintenance, Monitoring"],
+  ["ADVANCED", "II.D.2.k.3", "II.D.2.k", "3)", "Postoperative Considerations: Recovery Period, Discharge Criteria, Post-Discharge Monitoring/Follow-Up"],
+  ["ADVANCED", "II.D.2.l", "II.D.2", "l.", "Postoperative Analgesia"],
+  ["ADVANCED", "II.D.2.l.1", "II.D.2.l", "1)", "Systemic Medications and Routes of Administration, Multimodal Therapy"],
+  ["ADVANCED", "II.D.2.l.2", "II.D.2.l", "2)", "Regional Techniques: Caudal, Epidural, Nerve Blocks"],
+  ["ADVANCED", "II.D.2.m", "II.D.2", "m.", "Postoperative Nausea and Vomiting: Risk Factors, Prophylaxis, Treatment"],
+  ["ADVANCED", "II.D.2.n", "II.D.2", "n.", "Pediatric Sedation: Guidelines, Pharmacology, Credentialing, Indications, Monitoring, Complications"],
+  ["ADVANCED", "II.D.2.o", "II.D.2", "o.", "Pediatric Anesthesia Outside the Operating Room: Diagnostic and Interventional Radiologic Procedures, Gastroenterology Laboratory, MRIs, Radiation Therapy"],
+  ["ADVANCED", "II.D.3", "II.D", "3.", "Obstetric Anesthesia"],
+  ["ADVANCED", "II.D.3.a", "II.D.3", "a.", "Maternal Physiology"],
+  ["ADVANCED", "II.D.3.a.1", "II.D.3.a", "1)", "Effects of Pregnancy on Uptake and Distribution"],
+  ["ADVANCED", "II.D.3.a.2", "II.D.3.a", "2)", "Pulmonary (Anatomy, Lung Volumes and Capacities, Oxygen Consumption, Ventilation, Blood Gases, Acid Base)"],
+  ["ADVANCED", "II.D.3.a.3", "II.D.3.a", "3)", "Cardiovascular (Aorto-Caval Compression, Cardiac Indices)"],
+  ["ADVANCED", "II.D.3.a.4", "II.D.3.a", "4)", "Renal"],
+  ["ADVANCED", "II.D.3.a.5", "II.D.3.a", "5)", "Liver (Albumin/Globulin Ratio, Protein Binding of Drugs)"],
+  ["ADVANCED", "II.D.3.a.6", "II.D.3.a", "6)", "Gastrointestinal (Gastric Acid, Motility, Anatomic Position, Gastroesophageal Sphincter Function)"],
+  ["ADVANCED", "II.D.3.a.7", "II.D.3.a", "7)", "Hematology (Blood Volume, Plasma Proteins, Coagulation)"],
+  ["ADVANCED", "II.D.3.a.8", "II.D.3.a", "8)", "Musculoskeletal"],
+  ["ADVANCED", "II.D.3.a.9", "II.D.3.a", "9)", "Placenta"],
+  ["ADVANCED", "II.D.3.a.9.a", "II.D.3.a.9", "a)", "Anatomy"],
+  ["ADVANCED", "II.D.3.a.9.b", "II.D.3.a.9", "b)", "Placental Exchange: O2, CO2"],
+  ["ADVANCED", "II.D.3.a.9.c", "II.D.3.a.9", "c)", "Placental Blood Flow"],
+  ["ADVANCED", "II.D.3.a.9.d", "II.D.3.a.9", "d)", "Barrier Function"],
+  ["ADVANCED", "II.D.3.a.10", "II.D.3.a", "10)", "Multiple Gestation: Differences Compared with Singleton Gestation"],
+  ["ADVANCED", "II.D.3.b", "II.D.3", "b.", "Fetal/Perinatal Physiology"],
+  ["ADVANCED", "II.D.3.b.1", "II.D.3.b", "1)", "Cardiovascular System (Development, Fetal Circulation, Stress Response, Blood Volume)"],
+  ["ADVANCED", "II.D.3.b.2", "II.D.3.b", "2)", "Pulmonary (Development, Perinatal Changes in Type II Pneumocytes)"],
+  ["ADVANCED", "II.D.3.b.3", "II.D.3.b", "3)", "Thermoregulation"],
+  ["ADVANCED", "II.D.3.b.4", "II.D.3.b", "4)", "Neurologic (Development)"],
+  ["ADVANCED", "II.D.3.b.5", "II.D.3.b", "5)", "Amniotic Fluid (Production, Disposition, Role in Fetal Development)"],
+  ["ADVANCED", "II.D.3.b.6", "II.D.3.b", "6)", "Fetal to Neonatal Transition"],
+  ["ADVANCED", "II.D.3.c", "II.D.3", "c.", "Labor Physiology (Stages, Metabolism, Respiration, Cardiovascular, Thermoregulation)"],
+  ["ADVANCED", "II.D.3.d", "II.D.3", "d.", "Maternal and Fetal Pharmacology"],
+  ["ADVANCED", "II.D.3.d.1", "II.D.3.d", "1)", "Anesthetic Drugs and Adjuvants"],
+  ["ADVANCED", "II.D.3.d.2", "II.D.3.d", "2)", "Oxytocic Drugs (Indications, Adverse Effects)"],
+  ["ADVANCED", "II.D.3.d.3", "II.D.3.d", "3)", "Tocolytic Drugs (Indications, Adverse Effects)"],
+  ["ADVANCED", "II.D.3.d.4", "II.D.3.d", "4)", "Magnesium Sulfate (Maternal vs. Fetal Indications)"],
+  ["ADVANCED", "II.D.3.d.5", "II.D.3.d", "5)", "Fetal Pharmacology"],
+  ["ADVANCED", "II.D.3.d.5.a", "II.D.3.d.5", "a)", "Mechanisms of Placental Transfer, Placental Transfer of Specific Drugs"],
+  ["ADVANCED", "II.D.3.d.5.b", "II.D.3.d.5", "b)", "Fetal Drug Absorption, Distribution, Metabolism, Elimination"],
+  ["ADVANCED", "II.D.3.d.5.c", "II.D.3.d.5", "c)", "Drug Effects on the Newborn"],
+  ["ADVANCED", "II.D.3.e", "II.D.3", "e.", "Fetal Assessment"],
+  ["ADVANCED", "II.D.3.e.1", "II.D.3.e", "1)", "Amniotic Fluid (Amniocentesis, Oligohydramnios, Polyhydramnios)"],
+  ["ADVANCED", "II.D.3.e.2", "II.D.3.e", "2)", "Antepartum Fetal Assessment (Ultrasonography, Fetal Heart Rate Monitoring, Nonstress Test, Stress Test, Biophysical Profile, Umbilical Blood Flow, Middle Cerebral Artery Blood Flow)"],
+  ["ADVANCED", "II.D.3.e.3", "II.D.3.e", "3)", "Intrapartum Fetal Assessment (Fetal Heart Rate Monitoring, National Institute of Child Health and Human Development Criteria)"],
+  ["ADVANCED", "II.D.3.f", "II.D.3", "f.", "Analgesia for Labor and Vaginal Birth"],
+  ["ADVANCED", "II.D.3.f.1", "II.D.3.f", "1)", "Systemic Medications: Opioids, S edatives, Nitrous Oxide"],
+  ["ADVANCED", "II.D.3.f.2", "II.D.3.f", "2)", "Regional Techniques"],
+  ["ADVANCED", "II.D.3.f.2.a", "II.D.3.f.2", "a)", "Epidural, Spinal, Combined Spinal Epidural, Dural-Puncture Epidural, Continuous Spinal"],
+  ["ADVANCED", "II.D.3.f.2.b", "II.D.3.f.2", "b)", "Paracervical Block, Lumbar Sympathetic Block, Pudendal Block"],
+  ["ADVANCED", "II.D.3.f.3", "II.D.3.f", "3)", "Neuraxial Medications (Local Anesthetics, Opioids, Clonidine, Dexmedetomidine, Neostigmine, Epinephrine)"],
+  ["ADVANCED", "II.D.3.f.4", "II.D.3.f", "4)", "Infusion Methods (Patient-Controlled Epidural Analgesia, Continuous, Programmed Intermittent Bolus)"],
+  ["ADVANCED", "II.D.3.f.5", "II.D.3.f", "5)", "Complications and Side Effects of Neuraxial Labor Analgesia"],
+  ["ADVANCED", "II.D.3.f.5.a", "II.D.3.f.5", "a)", "Side Effects (Hypotension, Pruritus, Epidural Fever, Placental Perfusion)"],
+  ["ADVANCED", "II.D.3.f.5.b", "II.D.3.f.5", "b)", "Influence of Anesthetic Technique on Labor"],
+  ["ADVANCED", "II.D.3.f.5.c", "II.D.3.f.5", "c)", "Incorrect Catheter Location (Subdural, Intrathecal, Intravascular)"],
+  ["ADVANCED", "II.D.3.f.5.d", "II.D.3.f.5", "d)", "Post-Dural Puncture Headache"],
+  ["ADVANCED", "II.D.3.f.5.d.1", "II.D.3.f.5.d", "(1)", "Prevention (Needle Selection, Dural Puncture Management)"],
+  ["ADVANCED", "II.D.3.f.5.d.2", "II.D.3.f.5.d", "(2)", "Diagnosis (Evaluation, Differential Diagnosis)"],
+  ["ADVANCED", "II.D.3.f.5.d.3", "II.D.3.f.5.d", "(3)", "Treatment (Medications, Epidural Blood Patch, Sphenopalatine Ganglion Block)"],
+  ["ADVANCED", "II.D.3.f.5.d.4", "II.D.3.f.5.d", "(4)", "Complications (Subdural Hematoma, Cerebral Venous Thrombosis, Chronic Headache)"],
+  ["ADVANCED", "II.D.3.f.5.e", "II.D.3.f.5", "e)", "Infection (Epidural Abscess, Meningitis)"],
+  ["ADVANCED", "II.D.3.f.5.f", "II.D.3.f.5", "f)", "Postpartum Nerve Palsies"],
+  ["ADVANCED", "II.D.3.f.5.g", "II.D.3.f.5", "g)", "Epidural Hematoma"],
+  ["ADVANCED", "II.D.3.f.6", "II.D.3.f", "6)", "Anesthetic Considerations for Complicated Labor and Vaginal Birth"],
+  ["ADVANCED", "II.D.3.f.6.a", "II.D.3.f.6", "a)", "Intrauterine Fetal Resuscitation Techniques"],
+  ["ADVANCED", "II.D.3.f.6.b", "II.D.3.f.6", "b)", "Preterm Labor"],
+  ["ADVANCED", "II.D.3.f.6.c", "II.D.3.f.6", "c)", "Trial of Labor After Cesarean"],
+  ["ADVANCED", "II.D.3.f.6.d", "II.D.3.f.6", "d)", "Shoulder Dystocia"],
+  ["ADVANCED", "II.D.3.f.6.e", "II.D.3.f.6", "e)", "Instrumental Delivery (Vacuum, Forceps)"],
+  ["ADVANCED", "II.D.3.f.6.f", "II.D.3.f.6", "f)", "Vaginal Lacerations (Definitions, Anesthetic for Repair, Postpartum Analgesia)"],
+  ["ADVANCED", "II.D.3.g", "II.D.3", "g.", "Cesarean Delivery Anesthesia"],
+  ["ADVANCED", "II.D.3.g.1", "II.D.3.g", "1)", "Indications, Elective/Urgent/Emergent"],
+  ["ADVANCED", "II.D.3.g.1.a", "II.D.3.g.1", "a)", "Cord Prolapse"],
+  ["ADVANCED", "II.D.3.g.1.b", "II.D.3.g.1", "b)", "Prolonged Labor (Definitions)"],
+  ["ADVANCED", "II.D.3.g.1.c", "II.D.3.g.1", "c)", "Malposition and Malpresentation"],
+  ["ADVANCED", "II.D.3.g.1.c.1", "II.D.3.g.1.c", "(1)", "Breech, Transverse Lie"],
+  ["ADVANCED", "II.D.3.g.2", "II.D.3.g", "2)", "Neuraxial Anesthesia Considerations"],
+  ["ADVANCED", "II.D.3.g.2.a", "II.D.3.g.2", "a)", "Techniques: Advantages/Disadvantages, Block Assessment"],
+  ["ADVANCED", "II.D.3.g.2.b", "II.D.3.g.2", "b)", "Neuraxial Hypotension (Mechanism, Prophylaxis, Treatment)"],
+  ["ADVANCED", "II.D.3.g.2.c", "II.D.3.g.2", "c)", "Intraoperative Pain"],
+  ["ADVANCED", "II.D.3.g.3", "II.D.3.g", "3)", "General Anesthesia Considerations"],
+  ["ADVANCED", "II.D.3.g.3.a", "II.D.3.g.3", "a)", "Difficult Airway, Aspiration Prophylaxis"],
+  ["ADVANCED", "II.D.3.g.3.b", "II.D.3.g.3", "b)", "Pharmacologic Effects on Uterine Tone"],
+  ["ADVANCED", "II.D.3.g.4", "II.D.3.g", "4)", "Postoperative Considerations"],
+  ["ADVANCED", "II.D.3.g.4.a", "II.D.3.g.4", "a)", "Enhanced Recovery After Cesarean"],
+  ["ADVANCED", "II.D.3.g.4.b", "II.D.3.g.4", "b)", "Pain Management (Oral Adjuvants, Neuraxial Opioids, TAP Blocks, Erector Spinae Plane Block)"],
+  ["ADVANCED", "II.D.3.g.4.c", "II.D.3.g.4", "c)", "PACU Considerations"],
+  ["ADVANCED", "II.D.3.g.4.d", "II.D.3.g.4", "d)", "Respiratory Monitoring"],
+  ["ADVANCED", "II.D.3.h", "II.D.3", "h.", "Perinatology"],
+  ["ADVANCED", "II.D.3.h.1", "II.D.3.h", "1)", "Resuscitation of Newborn"],
+  ["ADVANCED", "II.D.3.h.1.a", "II.D.3.h.1", "a)", "Apgar Scoring"],
+  ["ADVANCED", "II.D.3.h.1.b", "II.D.3.h.1", "b)", "Umbilical Cord Blood Gas Measurements"],
+  ["ADVANCED", "II.D.3.h.1.c", "II.D.3.h.1", "c)", "Neonatal Resuscitation Program"],
+  ["ADVANCED", "II.D.3.h.2", "II.D.3.h", "2)", "Anesthetic Considerations in Breast-Feeding"],
+  ["ADVANCED", "II.D.3.i", "II.D.3", "i.", "Other Surgical Procedures in Pregnant and Postpartum Women"],
+  ["ADVANCED", "II.D.3.i.1", "II.D.3.i", "1)", "Ectopic Pregnancy"],
+  ["ADVANCED", "II.D.3.i.2", "II.D.3.i", "2)", "Cerclage Placement and Removal"],
+  ["ADVANCED", "II.D.3.i.3", "II.D.3.i", "3)", "Dilation and Curettage / Dilation and Evacuation"],
+  ["ADVANCED", "II.D.3.i.3.a", "II.D.3.i.3", "a)", "Gestational Trophoblastic Disease (Hydatid Mole)"],
+  ["ADVANCED", "II.D.3.i.3.b", "II.D.3.i.3", "b)", "Retained Products of Conception"],
+  ["ADVANCED", "II.D.3.i.4", "II.D.3.i", "4)", "External Cephalic Version"],
+  ["ADVANCED", "II.D.3.i.5", "II.D.3.i", "5)", "Cesarean Hysterectomy"],
+  ["ADVANCED", "II.D.3.i.6", "II.D.3.i", "6)", "Fetal Surgery"],
+  ["ADVANCED", "II.D.3.i.6.a", "II.D.3.i.6", "a)", "Maternal and Fetal Considerations, Intrauterine Fetal Resuscitation"],
+  ["ADVANCED", "II.D.3.i.6.b", "II.D.3.i.6", "b)", "Percutaneous Fetal Interventions (Periumbilical Blood Sampling, Twin to Twin Transfusion Syndrome, Fetal Laser Surgery"],
+  ["ADVANCED", "II.D.3.i.6.c", "II.D.3.i.6", "c)", "Laparoscopic Fetal Interventions (e.g., Myelomeningocele Repair)"],
+  ["ADVANCED", "II.D.3.i.6.d", "II.D.3.i.6", "d)", "EXIT Procedures"],
+  ["ADVANCED", "II.D.3.i.7", "II.D.3.i", "7)", "Non-Obstetric Surgery During Pregnancy"],
+  ["ADVANCED", "II.D.3.i.7.a", "II.D.3.i.7", "a)", "Endoscopic Retrograde Cholangiopancreatography and Gastrointestinal Interventions"],
+  ["ADVANCED", "II.D.3.i.7.b", "II.D.3.i.7", "b)", "Electroconvulsive Therapy in Pregnancy"],
+  ["ADVANCED", "II.D.3.j", "II.D.3", "j.", "Pathophysiology and Management of Complicated Pregnancy"],
+  ["ADVANCED", "II.D.3.k", "II.D.3", "k.", "Maternal Comorbidities"],
+  ["ADVANCED", "II.D.3.k.1", "II.D.3.k", "1)", "Cardiovascular and Hypertensive Disorders (Valvular, Congenital, Arrhythmias, Cardiomyopathy, Pulmonary Hypertension, Chronic/Gestational Hypertension)"],
+  ["ADVANCED", "II.D.3.k.2", "II.D.3.k", "2)", "Endocrine and Autoimmune Disorders (Thyroid, Gestational Diabetes, Type 1 and Type 2 Diabetes Mellitus, Lupus, Antiphospholipid Syndrome)"],
+  ["ADVANCED", "II.D.3.k.3", "II.D.3.k", "3)", "Neurologic and Musculoskeletal Disorders (Seizure Disorder, Myasthenia Gravis, Spinal Cord Injury, Multiple Sclerosis, Intracranial Mass, Benign Intracranial Hypertension, Scoliosis, Spina Bifida)"],
+  ["ADVANCED", "II.D.3.k.4", "II.D.3.k", "4)", "Respiratory and Infectious Diseases (Asthma, Respiratory Failure, HIV, HSV, COVID-19)"],
+  ["ADVANCED", "II.D.3.k.5", "II.D.3.k", "5)", "Hematologic and Renal Diseases (Iron Deficiency Anemia, Sickle Cell Anemia, Idiopathic Thrombocytopenic Purpura, Von Willebrand Disease, Nephrolithiasis, Chronic Kidney Disease)"],
+  ["ADVANCED", "II.D.3.k.6", "II.D.3.k", "6)", "Transplants, Immunosuppression, Cancer"],
+  ["ADVANCED", "II.D.3.k.7", "II.D.3.k", "7)", "Chronic Pain and Substance Use Disorder (Opioid)"],
+  ["ADVANCED", "II.D.4", "II.D", "4.", "Otorhinolaryngology (ENT) Anesthesia: Airway Endoscopy, Microlaryngeal Surgery, Laser Surgery, Hazards, Complications (Airway Fires, etc.) Laser-Safe Endotracheal Tubes, Maxillofacial Trauma"],
+  ["ADVANCED", "II.D.4.a", "II.D.4", "a.", "Intraoperative Thyroid and Parathyroid Function Monitoring"],
+  ["ADVANCED", "II.D.4.b", "II.D.4", "b.", "Nerve Injury Monitoring during ENT Surgery"],
+  ["ADVANCED", "II.D.5", "II.D", "5.", "Anesthesia for Plastic Surgery: Free flaps, Microvascular Surgery, Reconstructive S urgery"],
+  ["ADVANCED", "II.D.5.a", "II.D.5", "a.", "Liposuction"],
+  ["ADVANCED", "II.D.6", "II.D", "6.", "Anesthesia for Laparoscopic Surgery, Cholecystectomy, Gynecologic Surgery, Gastric Stapling, Hiatus Hernia Repair, Robotic Surgery, Anesthetic Management, Complications"],
+  ["ADVANCED", "II.D.7", "II.D", "7.", "Ophthalmologic Anesthesia, Retrobulbar a nd Peribulbar Blocks, Open Eye Injuries, Intraocular Pressure"],
+  ["ADVANCED", "II.D.8", "II.D", "8.", "Orthopedic Anesthesia"],
+  ["ADVANCED", "II.D.8.a", "II.D.8", "a.", "Tourniquet Management"],
+  ["ADVANCED", "II.D.8.b", "II.D.8", "b.", "Complications of Orthopedic Surgery"],
+  ["ADVANCED", "II.D.8.c", "II.D.8", "c.", "Regional vs. General Anesthesia"],
+  ["ADVANCED", "II.D.9", "II.D", "9.", "Trauma Anesthesia"],
+  ["ADVANCED", "II.D.9.a", "II.D.9", "a.", "Massive Trauma"],
+  ["ADVANCED", "II.D.9.a.1", "II.D.9.a", "1)", "Evaluation of the Trauma Patient"],
+  ["ADVANCED", "II.D.9.a.2", "II.D.9.a", "2)", "Resuscitation from Hemorrhagic Shock"],
+  ["ADVANCED", "II.D.9.b", "II.D.9", "b.", "Management of Traumatic Brain Injury"],
+  ["ADVANCED", "II.D.9.c", "II.D.9", "c.", "Burn Management"],
+  ["ADVANCED", "II.D.9.d", "II.D.9", "d.", "Mass Casualty, Disaster Management, and Preparedness"],
+  ["ADVANCED", "II.D.9.e", "II.D.9", "e.", "Chemical and Biological Warfare"],
+  ["ADVANCED", "II.D.10", "II.D", "10.", "Anesthesia for Ambulatory Surgery"],
+  ["ADVANCED", "II.D.10.a", "II.D.10", "a.", "Patient Selection and Preoperative Management"],
+  ["ADVANCED", "II.D.10.b", "II.D.10", "b.", "Anesthetic Management"],
+  ["ADVANCED", "II.D.10.c", "II.D.10", "c.", "Discharge Criteria and Postoperative Follow-Up, Including Continuous Nerve Blocks"],
+  ["ADVANCED", "II.D.10.d", "II.D.10", "d.", "Office-Based Anesthesia: Equipment, Safety, Organization, Patient Management"],
+  ["ADVANCED", "II.D.11", "II.D", "11.", "Geriatric Anesthesia/Aging"],
+  ["ADVANCED", "II.D.11.a", "II.D.11", "a.", "Pharmacological Implications, MAC Changes"],
+  ["ADVANCED", "II.D.11.b", "II.D.11", "b.", "Physiological Implications: CNS, Circulatory, Respiratory, Renal, Hepatic"],
+  ["ADVANCED", "II.D.12", "II.D", "12.", "Critical Care"],
+  ["ADVANCED", "II.D.12.a", "II.D.12", "a.", "Shock States"],
+  ["ADVANCED", "II.D.12.a.1", "II.D.12.a", "1)", "Etiology, Classification, Pathophysiology"],
+  ["ADVANCED", "II.D.12.a.2", "II.D.12.a", "2)", "Septic Shock and Life-Threatening Infection"],
+  ["ADVANCED", "II.D.12.a.2.a", "II.D.12.a.2", "a)", "Sequential (Sepsis Related) Organ Failure (SOFA) Assessment Score"],
+  ["ADVANCED", "II.D.12.a.3", "II.D.12.a", "3)", "Systemic Inflammatory Response Syndrome"],
+  ["ADVANCED", "II.D.12.a.4", "II.D.12.a", "4)", "Multiple Organ Dysfunction Syndrome"],
+  ["ADVANCED", "II.D.12.b", "II.D.12", "b.", "Poisoning and Drug Overdose"],
+  ["ADVANCED", "II.D.12.b.1", "II.D.12.b", "1)", "Prescription Medications"],
+  ["ADVANCED", "II.D.12.b.2", "II.D.12.b", "2)", "Carbon Monoxide"],
+  ["ADVANCED", "II.D.12.c", "II.D.12", "c.", "Drowning"],
+  ["ADVANCED", "II.D.12.d", "II.D.12", "d.", "Infection Control"],
+  ["ADVANCED", "II.D.12.d.1", "II.D.12.d", "1)", "Standard and Transmission-Based Precautions"],
+  ["ADVANCED", "II.D.12.d.2", "II.D.12.d", "2)", "Needle Stick Injury"],
+  ["ADVANCED", "II.D.12.d.3", "II.D.12.d", "3)", "Catheter Sepsis"],
+  ["ADVANCED", "II.D.12.d.3.a", "II.D.12.d.3", "a)", "Intravascular"],
+  ["ADVANCED", "II.D.12.d.3.b", "II.D.12.d.3", "b)", "Urinary"],
+  ["ADVANCED", "II.D.12.d.4", "II.D.12.d", "4)", "Nosocomial Infections: Ventilator Associated Pneumonia"],
+  ["ADVANCED", "II.D.12.d.5", "II.D.12.d", "5)", "Antibiotics: Antibacterial, Antifungal, Antiviral, Antiparasitic; Antimicrobial Resistance"],
+  ["ADVANCED", "II.D.12.e", "II.D.12", "e.", "Ventilator Management"],
+  ["ADVANCED", "II.D.12.e.1", "II.D.12.e", "1)", "Volume Controlled; Pressure Controlled; PEEP, Inspired Oxygen Concentration; Tidal Volume"],
+  ["ADVANCED", "II.D.12.e.2", "II.D.12.e", "2)", "Pressure Support; Weaning"],
+  ["ADVANCED", "II.D.12.e.3", "II.D.12.e", "3)", "Complications"],
+  ["ADVANCED", "II.E", null, "E.", "Special Problems or Issues in Anesthesiology"],
+  ["ADVANCED", "II.E.1", "II.E", "1.", "Electroconvulsive Therapy"],
+  ["ADVANCED", "II.E.2", "II.E", "2.", "Organ Donors: Pathophysiology and Clinical Management"],
+  ["ADVANCED", "II.E.2.a", "II.E.2", "a.", "Circulatory"],
+  ["ADVANCED", "II.E.2.b", "II.E.2", "b.", "Endocrine"],
+  ["ADVANCED", "II.E.2.c", "II.E.2", "c.", "Fluid and Electrolyte Management"],
+  ["ADVANCED", "II.E.2.d", "II.E.2", "d.", "Brain Death Criteria"],
+  ["ADVANCED", "II.E.3", "II.E", "3.", "Radiologic Procedures; CT Scan; MRI-Anesthetic Implications/Management, Anesthesia in Locations Outside the Operating Rooms"],
+  ["ADVANCED", "II.E.4", "II.E", "4.", "Ethics and Medico-Legal Issues"],
+  ["ADVANCED", "II.E.4.a", "II.E.4", "a.", "Professionalism: Definitions and Teaching"],
+  ["ADVANCED", "II.E.4.a.1", "II.E.4.a", "1)", "Disclosure of Errors or Adverse Events"],
+  ["ADVANCED", "II.E.4.a.2", "II.E.4.a", "2)", "Professional Behavior: Honesty, Integrity, Compassion, Respect, Altruism, Conflicts of Interest, Response to Marketing"],
+  ["ADVANCED", "II.E.4.a.3", "II.E.4.a", "3)", "Recognizing Limitations in Expertise and Need to Seek Guidance"],
+  ["ADVANCED", "II.E.4.a.4", "II.E.4.a", "4)", "Personal Role in Reporting Unsafe Conditions and Fitness for Work"],
+  ["ADVANCED", "II.E.4.a.5", "II.E.4.a", "5)", "Recognizing and Responding to Unprofessional Behavior"],
+  ["ADVANCED", "II.E.4.a.6", "II.E.4.a", "6)", "Evidence-Based Practice"],
+  ["ADVANCED", "II.E.4.b", "II.E.4", "b.", "Patient Autonomy and Decision-Making II.E.4.b .1 1) Principles of Informed Consent and Shared Decision-Making"],
+  ["ADVANCED", "II.E.4.b.2", "II.E.4.b", "2)", "Advance Directives, Do Not Resuscitate (DNR) Orders, Medical Orders for Life-Sustaining Treatment"],
+  ["ADVANCED", "II.E.4.b.3", "II.E.4.b", "3)", "Health Care Proxy Laws and Limitations"],
+  ["ADVANCED", "II.E.4.b.4", "II.E.4.b", "4)", "Patients Refusing Transfusion and Other Treatments"],
+  ["ADVANCED", "II.E.4.c", "II.E.4", "c.", "Legal and Regulatory Issues"],
+  ["ADVANCED", "II.E.4.c.1", "II.E.4.c", "1)", "Elements of Medical Malpractice: Duty, Breach of Duty, Causation, Damages"],
+  ["ADVANCED", "II.E.4.c.2", "II.E.4.c", "2)", "Legal Actions and Consequences, National Practitioner Data Bank, Closed Claims Findings, Professional Liability Insurance"],
+  ["ADVANCED", "II.E.4.c.3", "II.E.4.c", "3)", "Understanding Laws Related to Controlled Substances, Including Opioids and Cannabinoids"],
+  ["ADVANCED", "II.E.4.c.4", "II.E.4.c", "4)", "Patient Privacy Issues: Principles of Confidentiality, Access to Records, Protected Health Information"],
+  ["ADVANCED", "II.E.4.c.5", "II.E.4.c", "5)", "The Health Insurance Portability and Accountability Act (HIPAA)"],
+  ["ADVANCED", "II.E.4.d", "II.E.4", "d.", "Primary Certification, Recertification, Maintenance of Certification and Related Issues (Professional Standing, Lifelong Learning, Cognitive Knowledge, Clinical Practice Assessment, Systems-Based Practice)"],
+  ["ADVANCED", "II.E.4.e", "II.E.4", "e.", "Research Ethics"],
+  ["ADVANCED", "II.E.4.e.1", "II.E.4.e", "1)", "Principles of Justice, Autonomy, Beneficence, Nonmalfeasance"],
+  ["ADVANCED", "II.E.4.e.2", "II.E.4.e", "2)", "Ethical Standards in Research Design: Scientific Validity, Fair Subject Selection, Favorable Risk-Benefit Profile"],
+  ["ADVANCED", "II.E.4.e.3", "II.E.4.e", "3)", "Rigor in Ethical Design, Implementation, and Analysis of Interventional Studies: Roles of the Institutional Review Board, DSMB, clinicaltrials.gov, Publication of Protocols"],
+  ["ADVANCED", "II.E.4.e.4", "II.E.4.e", "4)", "Statistics: Data Dredging, Selection of Covariates A Priori, Bonferroni Correction"],
+  ["ADVANCED", "II.E.4.e.5", "II.E.4.e", "5)", "Informed Consent in research"],
+  ["ADVANCED", "II.E.4.e.6", "II.E.4.e", "6)", "Conflicts of Interest and Financial Disclosure"],
+  ["ADVANCED", "II.E.4.e.7", "II.E.4.e", "7)", "Academic Integrity, Publication Bias, Fraud"],
+  ["ADVANCED", "II.E.4.f", "II.E.4", "f.", "Clinician Wellness and Self-Care"],
+  ["ADVANCED", "II.E.4.f.1", "II.E.4.f", "1)", "Diagnosis and Treatment of Burnout"],
+  ["ADVANCED", "II.E.4.f.2", "II.E.4.f", "2)", "Sleep Deprivation"],
+  ["ADVANCED", "II.E.4.f.3", "II.E.4.f", "3)", "Adaptations for Clinical Disability"],
+  ["ADVANCED", "II.E.4.f.4", "II.E.4.f", "4)", "Substance Use Disorder"],
+  ["ADVANCED", "II.E.5", "II.E", "5.", "Practice Management"],
+  ["ADVANCED", "II.E.5.a", "II.E.5", "a.", "Costs of Medical/Anesthesia Care"],
+  ["ADVANCED", "II.E.5.a.1", "II.E.5.a", "1)", "Understanding Principles of Healthcare Funding and Payment"],
+  ["ADVANCED", "II.E.5.a.2", "II.E.5.a", "2)", "Cost-Conscious Practice"],
+  ["ADVANCED", "II.E.5.b", "II.E.5", "b.", "Efficient OR Staffing and Scheduling"],
+  ["ADVANCED", "II.E.5.b.1", "II.E.5.b", "1)", "Subspecialization Issues: Pediatrics, Cardiac, Regional, Obstetric Coverage"],
+  ["ADVANCED", "II.E.5.b.2", "II.E.5.b", "2)", "Anesthesia Care Team and Scope of Practice"],
+  ["ADVANCED", "II.E.5.c", "II.E.5", "c.", "Population Health: Perioperative Surgical Home and Enhanced Recovery"],
+  ["ADVANCED", "II.E.5.c.1", "II.E.5.c", "1)", "Population Based Health Determinants, Resources to Improve Access"],
+  ["ADVANCED", "II.E.5.c.2", "II.E.5.c", "2)", "Health Care Disparities Between Populations"],
+  ["ADVANCED", "II.E.5.d", "II.E.5", "d.", "Clinical Informatics"],
+  ["ADVANCED", "II.E.5.d.1", "II.E.5.d", "1)", "Electronic Medical Record Systems: Costs and Benefits"],
+  ["ADVANCED", "II.E.5.d.2", "II.E.5.d", "2)", "Artificial Intelligence and Machine Learning"],
+  ["ADVANCED", "II.E.5.e", "II.E.5", "e.", "Documentation, Coding, and Billing"],
+  ["ADVANCED", "II.E.5.e.1", "II.E.5.e", "1)", "Compliance with Documentation requirements"],
+  ["ADVANCED", "II.E.5.e.2", "II.E.5.e", "2)", "Accuracy, Clarity, Specificity of Medical Records"],
+  ["ADVANCED", "II.E.5.e.3", "II.E.5.e", "3)", "Coding Integrity, Audits, and Insurance Denials"],
+  ["ADVANCED", "II.E.6", "II.E", "6.", "Quality Improvement and Patient Safety"],
+  ["ADVANCED", "II.E.6.a", "II.E.6", "a.", "Definitions"],
+  ["ADVANCED", "II.E.6.a.1", "II.E.6.a", "1)", "Medical Error, Adverse Events, Sentinel Events, Misuse of Medications and Technology"],
+  ["ADVANCED", "II.E.6.a.2", "II.E.6.a", "2)", "Human Factors and Mindfulness"],
+  ["ADVANCED", "II.E.6.a.3", "II.E.6.a", "3)", "Systems Thinking and Technology Design"],
+  ["ADVANCED", "II.E.6.b", "II.E.6", "b.", "Medication Errors: Assessment and Prevention"],
+  ["ADVANCED", "II.E.6.b.1", "II.E.6.b", "1)", "Medication Reconciliation"],
+  ["ADVANCED", "II.E.6.b.2", "II.E.6.b", "2)", "Information Technology to Reduce Medication Errors"],
+  ["ADVANCED", "II.E.6.c", "II.E.6", "c.", "Crisis Management and Teamwork"],
+  ["ADVANCED", "II.E.6.c.1", "II.E.6.c", "1)", "Simulation Training"],
+  ["ADVANCED", "II.E.6.c.2", "II.E.6.c", "2)", "Crisis Manuals and Other Cognitive Aids"],
+  ["ADVANCED", "II.E.6.c.3", "II.E.6.c", "3)", "Teamwork Training"],
+  ["ADVANCED", "II.E.6.c.4", "II.E.6.c", "4)", "Handoff Communication"],
+  ["ADVANCED", "II.E.6.c.5", "II.E.6.c", "5)", "Preoperative and Procedural Checklists"],
+  ["ADVANCED", "II.E.6.d", "II.E.6", "d.", "Quality Improvement (QI) Basics"],
+  ["ADVANCED", "II.E.6.d.1", "II.E.6.d", "1)", "Design, Analysis, and Implementation of QI Projects"],
+  ["ADVANCED", "II.E.6.d.2", "II.E.6.d", "2)", "Data Collection"],
+  ["ADVANCED", "II.E.6.d.3", "II.E.6.d", "3)", "QI Metrics"],
+  ["ADVANCED", "II.E.6.d.4", "II.E.6.d", "4)", "Patient Satisfaction Measurement"],
+  ["ADVANCED", "II.E.6.d.5", "II.E.6.d", "5)", "Value-Based Care Incentives, Pay-for-Performance"],
+  ["ADVANCED", "II.E.6.e", "II.E.6", "e.", "Performance Assessment"],
+  ["ADVANCED", "II.E.6.e.1", "II.E.6.e", "1)", "Individual Benchmarking"],
+  ["ADVANCED", "II.E.6.e.2", "II.E.6.e", "2)", "Group and Facility Scorecards"],
+  ["ADVANCED", "II.E.6.e.3", "II.E.6.e", "3)", "Public Reporting"],
+  ["ADVANCED", "II.E.6.e.3.a", "II.E.6.e.3", "a)", "Federal Quality Payment Program"],
+  ["ADVANCED", "II.E.6.e.3.b", "II.E.6.e.3", "b)", "Anesthesia Registries"],
+  ["ADVANCED", "II.E.6.f", "II.E.6", "f.", "Change Management Methods"],
+  ["ADVANCED", "II.E.6.f.1", "II.E.6.f", "1)", "Peer Review and Morbidity and Mortality Conferences"],
+  ["ADVANCED", "II.E.6.f.2", "II.E.6.f", "2)", "Lean Six Sigma"],
+  ["ADVANCED", "II.E.6.f.3", "II.E.6.f", "3)", "QI and the 5S Process"],
+  ["ADVANCED", "II.E.6.f.4", "II.E.6.f", "4)", "Value Stream Mapping"],
+  ["ADVANCED", "II.E.6.f.5", "II.E.6.f", "5)", "Failure Mode and Effects Analysis"],
+  ["ADVANCED", "II.E.6.f.6", "II.E.6.f", "6)", "Root Cause Analysis"],
+  ["ADVANCED", "II.E.6.g", "II.E.6", "g.", "Barriers to QI"],
+  ["ADVANCED", "II.E.7", "II.E", "7.", "Diversity, Equity, and Inclusion (DEI) in Health Care"],
+  ["ADVANCED", "II.E.7.a", "II.E.7", "a.", "Barriers"],
+  ["ADVANCED", "II.E.7.a.1", "II.E.7.a", "1)", "Systematic Racism, Colorism/Shadeism, Sexism, Discrimination Against Sexual Orientation, Gender Identity, Language, National Origin, Ethnicity, Religion, Immigration/Citizenship Status, Age, Familial Status, and Disability"],
+  ["ADVANCED", "II.E.7.a.2", "II.E.7.a", "2)", "Bias; Implicit bias, Microaggression, Stereotype Threat"],
+  ["ADVANCED", "II.E.7.b", "II.E.7", "b.", "Approaches to Improvement; Interventions at Individual, Inter-Personal, Community, Organizational and Policy Levels; Cultural and Gender Competency, Upstander vs. Bystander, Allyship vs. Performative Action, Tokenism vs . Representation, Assortativity vs. Homophily"],
+  ["ADVANCED", "II.E.7.c", "II.E.7", "c.", "DEI in the Workplace"],
+  ["ADVANCED", "II.E.7.d", "II.E.7", "d.", "DEI in Academia"],
+  ["ADVANCED", "II.E.7.d.1", "II.E.7.d", "1)", "Leadership"],
+  ["ADVANCED", "II.E.7.d.2", "II.E.7.d", "2)", "Scholarship; Representation of Diversity and Race Related Topics in Research, Importance of Language in Reports Discussing Racial Inequities"],
+  ["ADVANCED", "II.E.8", "II.E", "8.", "Healthcare Disparities"],
+  ["ADVANCED", "II.E.8.a", "II.E.8", "a.", "Social Determinants of Health Considerations in Assessment and Management of Patients – Race, Language, Education Status, Religion, Housing, Nutrition, Geographic Location, Rural vs. Urban, Access to and Quality of Care, Health Coverage"],
+  ["ADVANCED", "II.E.8.b", "II.E.8", "b.", "Maternal Healthcare Disparities; Maternal Mortality and Morbidity, Pain Management"],
+  ["ADVANCED", "II.E.8.c", "II.E.8", "c.", "Child and Adolescent Healthcare Disparities"]
+];
+const abaIndex = {
+  BASIC: [
+    ['Foundations',[[5,'Anatomy'],[5,'Equipment, monitoring, and physics'],[8,'Math and statistics'],[8,'Drugs and anesthetic agents']]],
+    ['Perioperative care',[[11,'Preoperative assessment and preparation'],[12,'Regional techniques'],[12,'General anesthesia'],[13,'Sedation and monitored care'],[13,'Intraoperative fluids'],[13,'Common adverse events'],[14,'Care after anesthesia']]],
+    ['Organ systems',[[15,'Central and peripheral neurology'],[17,'Pulmonary physiology and care'],[19,'Cardiovascular physiology and care'],[20,'Digestive and liver systems'],[20,'Kidneys, urinary tract, and electrolytes'],[21,'Blood and coagulation'],[22,'Hormonal and metabolic physiology'],[22,'Neuromuscular transmission']]],
+    ['Professional issues',[[23,'Clinician impairment, disability, and well-being'],[23,'Ethics, practice operations, and legal responsibilities']]]
+  ],
+  ADVANCED: [
+    ['Foundations',[[24,'Equipment, monitoring, and physics'],[25,'Advanced pharmacology']]],
+    ['Anesthetic techniques',[[26,'Regional techniques'],[27,'Specialized techniques']]],
+    ['Organ systems',[[27,'Central and peripheral neurology'],[29,'Pulmonary disease and anesthesia'],[31,'Cardiovascular disease and anesthesia'],[34,'Digestive and liver systems'],[35,'Renal disease and electrolyte management'],[35,'Hematology and coagulation'],[36,'Endocrine and metabolic disease'],[37,'Neuromuscular conditions']]],
+    ['Subspecialties',[[38,'Pain conditions'],[39,'Anesthesia for children'],[42,'Anesthesia for pregnancy and childbirth'],[45,'ENT and airway surgery'],[45,'Plastic and reconstructive surgery'],[46,'Laparoscopy and robotic surgery'],[46,'Eye surgery and orbital blocks'],[46,'Orthopedics'],[46,'Trauma'],[46,'Outpatient surgery'],[46,'Anesthesia for older adults'],[46,'Intensive care']]],
+    ['Special settings and professional issues',[[47,'Anesthesia for ECT'],[47,'Care of organ donors'],[47,'Imaging and care outside the operating room'],[47,'Ethics and legal responsibilities'],[49,'Managing an anesthesia practice'],[49,'Improving quality and safety'],[50,'Equity and inclusion in care'],[51,'Disparities in health care']]]
+  ]
+};
 const $ = id => document.getElementById(id);
 const client = window.supabase?.createClient(
   'https://abltiivvndakwryydtgm.supabase.co',
@@ -115,22 +1498,18 @@ function snapshot() {
 function install(content) {
   const active = state?.active ?? 0;
   state = {...content,active,expanded:{BASIC:true,ADVANCED:false,Bookmarks:false}};
-  topics = [...state.baseTopics,...state.customTopics].map(topic => [...topic]);
-  for (const [index,title] of Object.entries(state.titles ?? {})) {
-    if (topics[index]) topics[index][1] = title;
-  }
-  if (!topics[active]) state.active = 0;
   baseline = snapshot();
-  const branch = topics[state.active];
-  state.expanded[branch[0]] = true;
+  installOutline();
+  rebuildBranches();
+  if (state.active != null) revealTopic(state.active);
   $('cloud-onboard').hidden = true;
   $('guide-layout').hidden = false;
   $('theme').hidden = false;
   highlightColor.value = /^#[0-9a-f]{6}$/i.test(state.highlightColor) ? state.highlightColor : '#ffe380';
   showHighlightColor();
   applyTheme();
-  render();
   message('Synced');
+  render();
 }
 function save() {
   if (!owner || !state || snapshot() === baseline) return;
@@ -182,15 +1561,16 @@ function exportBackup() {
 function cleanHTML(html) {
   const template = document.createElement('template');
   template.innerHTML = html;
-  const allowed = new Set('P DIV SPAN BR B STRONG I EM U S STRIKE SUB SUP H1 H2 H3 H4 H5 H6 UL OL LI BLOCKQUOTE PRE CODE IMG FONT ABA-COMMENT'.split(' '));
+  const allowed = new Set('P DIV SECTION SPAN MARK BR B STRONG I EM U S STRIKE SUB SUP H1 H2 H3 H4 H5 H6 UL OL LI BLOCKQUOTE PRE CODE IMG FONT ABA-COMMENT'.split(' '));
   for (const el of template.content.querySelectorAll('*')) {
     if (!allowed.has(el.tagName)) {
       el.replaceWith(document.createTextNode(el.textContent));
       continue;
     }
     for (const attr of [...el.attributes]) {
+      if (attr.name === 'class' && el.tagName === 'SECTION' && attr.value === 'study-outline') continue;
       if (attr.name === 'src' && el.tagName === 'IMG' &&
-          /^data:image\/(webp|png|jpeg);base64,[a-z0-9+/=]+$/i.test(attr.value)) continue;
+          /^data:image\/(webp|png|jpeg|gif|avif);base64,[a-z0-9+/=]+$/i.test(attr.value)) continue;
       if (['alt','tabindex','role','aria-label','data-comment','color','face','size'].includes(attr.name)) continue;
       if (attr.name === 'style') {
         const keep = Array.from(el.style).filter(prop =>
@@ -210,7 +1590,17 @@ function readBackup(content) {
   const entries = [...content.baseTopics,...content.customTopics];
   if (!entries.length || entries.some(topic => !Array.isArray(topic) || !['BASIC','ADVANCED'].includes(topic[0]) ||
       typeof topic[1] !== 'string' || !Array.isArray(topic[4]) ||
-      (topic[6] != null && !entries[topic[6]]))) throw Error('Invalid topics');
+      (topic[6] != null && (!Number.isInteger(topic[6]) || !entries[topic[6]] ||
+        entries[topic[6]][0] !== topic[0])))) throw Error('Invalid topics');
+  const checked = new Set();
+  for (const index of entries.keys()) {
+    const path = new Set();
+    for (let node = index; node != null && !checked.has(node); node = entries[node][6]) {
+      if (path.has(node)) throw Error('Cyclic topics');
+      path.add(node);
+    }
+    for (const node of path) checked.add(node);
+  }
   for (const topic of entries) topic[3] = cleanHTML(String(topic[3] ?? ''));
   for (const topic of Object.values(content.topics)) {
     if (typeof topic.body === 'string') topic.body = cleanHTML(topic.body);
@@ -297,6 +1687,129 @@ function startCloud() {
   client.auth.getSession().then(({data}) => start(data.session));
 }
 
+function installOutline() {
+  // Tuple fields 6–9 hold the parent slot, legacy category, stable ID, and ABA label.
+  // Keep existing slots so old notes, images, bookmarks, and checklist checks still resolve.
+  topics = [...state.baseTopics,...state.customTopics];
+  if (!state.nestedOutlineAdded) {
+    const oldGroups = {
+      BASIC: {Foundations:'I.A', 'Perioperative care':'I.B', 'Organ systems':'I.C', 'Professional issues':'I.D'},
+      ADVANCED: {Foundations:'II.A', 'Anesthetic techniques':'II.B', 'Organ systems':'II.C',
+        Subspecialties:'II.D', 'Special settings and professional issues':'II.E'}
+    };
+    const legacySlots = new Map();
+    const groupCounts = {};
+    if (state.abaTopicsAdded) {
+      topics.forEach(([exam,title,,,,,parent,category], index) => {
+        const group = oldGroups[exam]?.[category];
+        const legacy = abaIndex[exam]?.find(([name]) => name === category)?.[1] ?? [];
+        if (group && parent == null && legacy.some(([,name]) => name === title)) {
+          const position = groupCounts[group] = (groupCounts[group] ?? 0) + 1;
+          legacySlots.set(group + '.' + position, index);
+        }
+        if (topics[parent]?.[1] === 'Anatomy') {
+          const anatomy = ['Topographical Anatomy as Landmarks','Radiological and Ultrasound Anatomy','Clinical Anatomy'];
+          const position = anatomy.indexOf(title);
+          if (position >= 0) legacySlots.set('I.A.1.' + 'abc'[position], index);
+        }
+      });
+    }
+    const slots = new Map();
+    for (const [exam,id,parent,label,title] of officialOutline) {
+      const prior = legacySlots.get(id);
+      const parentSlot = slots.get(parent) ?? null;
+      if (prior != null) {
+        const entry = topics[prior];
+        entry[1] = title;
+        entry[6] = parentSlot;
+        entry[7] = null;
+        entry[8] = id;
+        entry[9] = label;
+        slots.set(id,prior);
+        continue;
+      }
+      const entry = [exam,title,'','',[],null,parentSlot,null,id,label];
+      slots.set(id,topics.length);
+      topics.push(entry);
+      state.customTopics.push(entry);
+    }
+    state.nestedOutlineAdded = true;
+  }
+  topics.forEach((topic,index) => {
+    topic[8] ??= 'personal-' + index;
+    if (state.titles?.[index]) topic[1] = state.titles[index];
+  });
+}
+const childrenByParent = new Map();
+const rootTopics = new Map();
+const branchSlots = new Set();
+const visibleTopics = new Set();
+const isRemoved = index => state.removedTopics?.[topics[index][8]] === true;
+function selectAvailableTopic() {
+  while (topics[state.active] && !visibleTopics.has(state.active)) {
+    state.active = topics[state.active][6] ?? null;
+  }
+  if (!visibleTopics.has(state.active)) state.active = [...rootTopics.values()].flat()[0] ?? null;
+}
+function rebuildBranches() {
+  childrenByParent.clear();
+  rootTopics.clear();
+  branchSlots.clear();
+  visibleTopics.clear();
+  topics.forEach((topic,index) => {
+    const parent = topic[6];
+    if (parent != null) branchSlots.add(parent);
+    if (isRemoved(index)) return;
+    const branches = parent == null ? rootTopics : childrenByParent;
+    const key = parent ?? topic[0];
+    if (!branches.has(key)) branches.set(key,[]);
+    branches.get(key).push(index);
+  });
+  for (const siblings of [...rootTopics.values(),...childrenByParent.values()]) {
+    siblings.sort((a,b) => (sourceOrder.get(topics[a][8]) ?? Infinity) - (sourceOrder.get(topics[b][8]) ?? Infinity));
+  }
+  const pending = [...rootTopics.values()].flat();
+  while (pending.length) {
+    const index = pending.pop();
+    visibleTopics.add(index);
+    for (const child of childrenByParent.get(index) ?? []) pending.push(child);
+  }
+  selectAvailableTopic();
+}
+const sourceOrder = new Map(officialOutline.map(([,id],i) => [id,i]));
+const childrenOf = index => childrenByParent.get(index) ?? [];
+const nodeKey = index => 'node/' + topics[index][8];
+const progressLabels = new Map();
+let progressByNode;
+function calculateProgress() {
+  const counts = new Map();
+  const stack = [...rootTopics.values()].flat();
+  const order = [];
+  while (stack.length) {
+    const index = stack.pop();
+    order.push(index);
+    for (const child of childrenOf(index)) stack.push(child);
+  }
+  for (let i = order.length - 1; i >= 0; i--) {
+    const index = order[i];
+    const children = childrenOf(index);
+    if (!branchSlots.has(index)) {
+      const record = state.topics[index];
+      const checklist = checklistItems(index);
+      const wasChecked = checklist.length > 0 && checklist.every((_,item) => record?.checks?.[item]);
+      counts.set(index,[Number(record?.complete ?? wasChecked),1]);
+      continue;
+    }
+    let done = 0, total = 0;
+    for (const child of children) {
+      const [childDone,childTotal] = counts.get(child);
+      done += childDone;
+      total += childTotal;
+    }
+    counts.set(index,[done,total]);
+  }
+  return counts;
+}
 let range;
 const formatHelp = $('format-help').textContent;
 const current = () => state.topics[state.active] ??= {notes:'',checks:{},bookmark:false};
@@ -308,55 +1821,70 @@ function addTopicLink(container,index,label = topics[index][1]) {
   container.append(button);
   return button;
 }
-function letter(position) {
-  let label = '';
-  for (let n = position + 1; n > 0; n = Math.floor((n - 1)/26)) {
-    label = String.fromCharCode(97 + (n - 1)%26) + label;
-  }
-  return label + '.';
-}
 function renderTopicBranches(container,indices) {
-  const parents = indices.filter(i => topics[i][6] == null);
-  parents.forEach((index,position) => {
-    const name = topics[index][1];
-    const children = indices.filter(i => topics[i][6] === index);
+  for (const index of indices) {
+    const [,title,,,,,,,id,label] = topics[index];
+    const children = childrenOf(index);
+    const node = document.createElement('div');
+    node.className = 'topic-node';
+    node.dataset.nodeId = id;
     const row = document.createElement('div');
     row.className = 'topic-row';
-    const active = index === state.active || children.includes(state.active);
-    row.classList.toggle('is-active',active);
+    row.classList.toggle('is-active',index === state.active);
     const branch = document.createElement('div');
+    branch.id = 'children-' + id;
     branch.className = 'topic-children';
-    if (active) {
-      children.forEach((child,childPosition) => {
-        addTopicLink(branch,child,letter(childPosition) + ' ' + topics[child][1]);
-      });
+    const toggle = document.createElement('button');
+    toggle.className = 'topic-toggle';
+    toggle.hidden = !children.length;
+    toggle.setAttribute('aria-controls',branch.id);
+    function updateDisclosure() {
+      const open = !!state.expanded[nodeKey(index)];
+      toggle.textContent = open ? '▾' : '▸';
+      toggle.setAttribute('aria-expanded',open);
+      toggle.setAttribute('aria-label',(open ? 'Collapse ' : 'Expand ') + title);
+      branch.hidden = !open;
+      if (open && !branch.childElementCount) renderTopicBranches(branch,children);
     }
-    addTopicLink(row,index,(position + 1) + '. ' + name).className = 'topic-title';
+    toggle.onclick = () => {
+      state.expanded[nodeKey(index)] = !state.expanded[nodeKey(index)];
+      updateDisclosure();
+      save();
+    };
+    row.append(toggle);
+    const button = addTopicLink(row,index,label ? label + ' ' + title : title);
+    button.className = 'topic-title';
+    const status = document.createElement('span');
+    status.className = 'node-progress';
+    progressLabels.set(index,status);
+    updateNodeProgress(index,status);
+    button.append(status);
     const add = document.createElement('button');
     add.textContent = '+';
     add.className = 'subsection-add';
     add.title = 'Add subsection';
-    add.setAttribute('aria-label','Add subsection to ' + topics[index][1]);
+    add.setAttribute('aria-label','Add subsection to ' + title);
     add.onclick = () => openOutlineForm(topics[index][0],index);
     row.append(add);
-    container.append(row);
-    if (active && children.length) container.append(branch);
-  });
+    node.append(row);
+    if (children.length) {
+      node.append(branch);
+      updateDisclosure();
+    }
+    container.append(node);
+  }
+}
+function revealTopic(index) {
+  state.expanded[topics[index][0]] = true;
+  for (let parent = topics[index][6]; parent != null; parent = topics[parent][6]) {
+    state.expanded[nodeKey(parent)] = true;
+  }
 }
 function openTopic(index) {
   state.active = index;
-  const [exam] = topics[index];
-  state.expanded[exam] = true;
-  state.expanded[categoryKey(exam,topicCategory(index))] = true;
+  revealTopic(index);
   render();
   $('title').focus();
-}
-function topicCategory(index) {
-  const topic = topics[index];
-  return topics[topic[6] ?? index][7] ?? 'My topics';
-}
-function categoryKey(exam,category) {
-  return exam + '/category/' + category;
 }
 function disclosure(title,key) {
   const details = document.createElement('details');
@@ -365,7 +1893,7 @@ function disclosure(title,key) {
   details.append(summary);
   details.open = !!state.expanded[key];
   details.ontoggle = () => {
-    if (!details.isConnected) return;
+    if (!details.isConnected || !!state.expanded[key] === details.open) return;
     state.expanded[key] = details.open;
     save();
   };
@@ -373,39 +1901,51 @@ function disclosure(title,key) {
 }
 function renderNav() {
   const outline = $('outline');
+  const scroll = outline.parentElement.scrollTop;
   outline.replaceChildren();
+  progressLabels.clear();
   for (const group of ['BASIC','ADVANCED','Bookmarks']) {
     const section = disclosure(group,group);
-    const indices = topics.map((_, index) => index).filter(index =>
-      group === 'Bookmarks' ? state.topics[index]?.bookmark : topics[index][0] === group);
     if (group === 'Bookmarks') {
+      const indices = topics.map((_,index) => index).filter(index => visibleTopics.has(index) && state.topics[index]?.bookmark);
       for (const index of indices) addTopicLink(section,index);
-    } else {
-      const categories = [...(state.categories[group] ?? []),'My topics'];
-      for (const category of categories) {
-        const matching = indices.filter(index => topicCategory(index) === category);
-        if (!matching.length) continue;
-        const key = categoryKey(group,category);
-        state.expanded[key] ??= matching.includes(state.active);
-        const bucket = disclosure(category,key);
-        bucket.className = 'exam-category';
-        renderTopicBranches(bucket,matching);
-        section.append(bucket);
+      if (!indices.length) {
+        const empty = document.createElement('p');
+        empty.className = 'meta';
+        empty.textContent = 'Bookmarked topics appear here.';
+        section.append(empty);
       }
+    } else {
+      renderTopicBranches(section,rootTopics.get(group) ?? []);
       const add = document.createElement('button');
       add.className = 'outline-add';
       add.textContent = 'Add topic';
       add.onclick = () => openOutlineForm(group);
       section.append(add);
     }
-    if (group === 'Bookmarks' && !indices.length) {
-      const empty = document.createElement('p');
-      empty.className = 'meta';
-      empty.textContent = 'Bookmarked topics appear here.';
-      section.append(empty);
+    outline.append(section);
+  }
+  const removed = topics.map((_,index) => index).filter(index => {
+    const parent = topics[index][6];
+    return isRemoved(index) && (parent == null || visibleTopics.has(parent));
+  });
+  if (removed.length) {
+    const section = disclosure('Removed topics','Removed topics');
+    for (const index of removed) {
+      const restore = document.createElement('button');
+      const path = [];
+      for (let node = index; node != null; node = topics[node][6]) path.unshift(topics[node][1]);
+      restore.textContent = 'Restore ' + path.join(' / ');
+      restore.onclick = () => {
+        delete state.removedTopics[topics[index][8]];
+        rebuildBranches();
+        openTopic(index);
+      };
+      section.append(restore);
     }
     outline.append(section);
   }
+  outline.parentElement.scrollTop = scroll;
 }
 const outlineDialog = $('outline-dialog');
 const outlineName = $('outline-name');
@@ -419,6 +1959,8 @@ function openOutlineForm(exam,topicIndex,indexToEdit) {
   $('outline-title').textContent = editing ? 'Edit ' + kind : 'Add ' + kind + ' to ' + (topicIndex == null ? exam : topics[topicIndex][1]);
   $('outline-name-label').textContent = editing ? 'Title' : kind[0].toUpperCase() + kind.slice(1) + ' name';
   $('outline-submit').textContent = editing ? 'Save changes' : 'Add ' + kind;
+  $('outline-remove').hidden = !editing;
+  $('outline-remove').textContent = 'Remove ' + kind;
   outlineName.value = editing ? topics[editIndex][1] : '';
   $('outline-description-field').hidden = !editing;
   $('outline-description').value = editing ? state.topics[editIndex]?.description ?? topics[editIndex][2] : '';
@@ -429,6 +1971,23 @@ function openOutlineForm(exam,topicIndex,indexToEdit) {
 $('edit-topic').onclick = () => openOutlineForm(topics[state.active][0],null,state.active);
 outlineName.oninput = () => outlineName.setCustomValidity('');
 $('outline-cancel').onclick = () => outlineDialog.close();
+$('outline-remove').onclick = () => {
+  const index = editIndex;
+  if (index == null) return;
+  const scope = childrenOf(index).length ? ' and its subsections' : '';
+  if (!window.confirm('Remove “' + topics[index][1] + '”' + scope +
+    '? You can restore it from Removed topics.')) return;
+  outlineDialog.close();
+  (state.removedTopics ??= {})[topics[index][8]] = true;
+  state.expanded['Removed topics'] = true;
+  rebuildBranches();
+  if (state.active == null) {
+    render();
+    $('outline').querySelector('summary')?.focus();
+  } else {
+    openTopic(state.active);
+  }
+};
 $('outline-form').onsubmit = event => {
   event.preventDefault();
   const name = outlineName.value.trim();
@@ -449,42 +2008,112 @@ $('outline-form').onsubmit = event => {
   const kind = outlineTopic == null ? 'topic' : 'subsection';
   const topic = [outlineExam,name,'','',['Review this ' + kind],null,outlineTopic ?? null];
   state.customTopics.push(topic);
+  topic[8] = 'personal-' + topics.length;
   topics.push(topic);
+  rebuildBranches();
   openTopic(topics.length - 1);
 };
 function checklistItems(index) {
   return state.topics[index]?.checklist ?? topics[index][4];
 }
-function renderProgress() {
-  const total = topics.reduce((count,_,index) => count + checklistItems(index).length,0);
-  const done = topics.reduce((count,topic,index) => count +
-    checklistItems(index).filter((_,item) => state.topics[index]?.checks[item]).length,0);
-  $('progress').max = total;
-  $('progress').value = done;
-  $('progress-label').textContent = done + ' of ' + total + ' review items checked';
+function updateNodeProgress(index, label) {
+  const [done,total] = progressByNode.get(index);
+  label.textContent = branchSlots.has(index) ? done + ' / ' + total : done ? 'Complete' : '';
 }
+function renderProgress() {
+  progressByNode = calculateProgress();
+  let done = 0, total = 0;
+  for (const index of [...rootTopics.values()].flat()) {
+    const [rootDone,rootTotal] = progressByNode.get(index);
+    done += rootDone;
+    total += rootTotal;
+  }
+  $('progress').max = Math.max(total,1);
+  $('progress').value = done;
+  $('progress-label').textContent = done + ' of ' + total + ' study topics complete';
+  for (const [index,label] of progressLabels) updateNodeProgress(index,label);
+  if (state.active == null) return;
+  const [activeDone,activeTotal] = progressByNode.get(state.active);
+  $('completion-control').hidden = branchSlots.has(state.active);
+  $('complete-topic').checked = !!activeDone;
+  $('branch-progress').hidden = !branchSlots.has(state.active);
+  $('branch-progress').textContent = activeDone + ' of ' + activeTotal + ' topics complete in this section';
+}
+$('complete-topic').onchange = event => {
+  current().complete = event.target.checked;
+  renderProgress();
+  save();
+};
 function renderBookmark() {
   $('bookmark').textContent = current().bookmark ? '★ Bookmarked' : '☆ Bookmark';
   $('bookmark').setAttribute('aria-pressed',current().bookmark);
 }
+function studyOutline(index) {
+  const section = document.createElement('section');
+  section.className = 'study-outline';
+  const heading = document.createElement('h3');
+  heading.textContent = studyOutlineLabel(index);
+  section.append(heading);
+
+  const stack = [[index,section]];
+  while (stack.length) {
+    const [parent,container] = stack.pop();
+    const children = childrenOf(parent);
+    if (!children.length) continue;
+    const list = document.createElement('ul');
+    container.append(list);
+    for (const child of children) {
+      const item = document.createElement('li');
+      item.textContent = studyOutlineLabel(child);
+      list.append(item);
+      stack.push([child,item]);
+    }
+  }
+  return section;
+}
+function studyOutlineLabel(index) {
+  const title = topics[index][1];
+  const label = topics[index][9];
+  return label ? label + ' ' + title : title;
+}
+function renderStudyText(index, defaultBody) {
+  const record = current();
+  editor.innerHTML = record.body ?? defaultBody;
+  // Existing study text stays intact when the outline is first added.
+  if (!record.bodyIncludesOutline) editor.prepend(studyOutline(index));
+}
 function render() {
-  const [exam,title,intro,body,,,parentIndex] = topics[state.active];
+  const empty = state.active == null;
+  $('study-main').hidden = empty;
+  $('study-notes').hidden = empty;
+  if (empty) {
+    renderProgress();
+    renderNav();
+    save();
+    return;
+  }
+  const [exam,title,intro,body,,,,,id] = topics[state.active];
+  const ancestors = [];
+  for (let parent = topics[state.active][6]; parent != null; parent = topics[parent][6]) {
+    ancestors.push(topics[parent][1]);
+  }
   range = null;
   $('format-help').textContent = formatHelp;
   $('image-status').hidden = true;
-  $('exam').textContent = exam + ' EXAM' + (parentIndex == null ? '' : ' / ' + topics[parentIndex][1]);
+  $('exam').textContent = [exam + ' EXAM',...ancestors.reverse()].join(' / ');
   $('title').textContent = title;
+  $('title').dataset.nodeId = id;
   $('title').tabIndex = -1;
   $('intro').textContent = current().description ?? intro;
   $('notes-topic').textContent = title;
   $('notes').value = current().notes;
-  $('editor').innerHTML = current().body ?? body;
+  renderStudyText(state.active,body);
   closeImageSizer();
   for (const image of $('editor').querySelectorAll('img')) image.tabIndex = 0;
   renderChecklist();
+  renderProgress();
   renderNav();
   renderBookmark();
-  renderProgress();
   save();
 }
 function renderChecklist() {
@@ -676,7 +2305,12 @@ $('comment-delete').onclick = () => {
   saveText();
   dialog.close();
 };
-function saveText() {current().body = editor.innerHTML; save();}
+function saveText() {
+  const record = current();
+  record.body = editor.innerHTML;
+  record.bodyIncludesOutline = true;
+  save();
+}
 const imageWidth = $('image-width');
 let selectedImage;
 function closeImageSizer() {
