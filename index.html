@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABA Boards Guide</title>
+<style>
+:root{color-scheme:light;--bg:#f3f6f9;--paper:#fff;--ink:#142846;--muted:#52647a;--line:#d8e2ec;--accent:#006a63;--soft:#e0f2ee;--nav:#142846;--mark:#ffe380}
+:root[data-theme=dark]{color-scheme:dark;--bg:#101a2a;--paper:#19263a;--ink:#eaf2fb;--muted:#b3c1d2;--line:#39495e;--accent:#87e1d3;--soft:#233e43;--nav:#101827}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}button,textarea{font:inherit}button{cursor:pointer;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:7px 12px}button:hover,button[aria-pressed=true]{background:var(--soft);color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+header{background:var(--nav);color:white;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px clamp(16px,4vw,64px)}.brand{display:flex;align-items:center;gap:12px;font-weight:700}.symbol{background:#8ee3d5;color:#142846;border-radius:10px;width:38px;height:38px;display:grid;place-items:center}.symbol svg{width:24px}.header-actions{display:flex;flex-wrap:wrap;gap:10px}header button{background:#233a58;color:white;border-color:#53657a;font-size:.875rem}header button:hover{background:#374f70;color:white}
+.layout{display:grid;grid-template-columns:minmax(200px,245px) minmax(0,1fr) minmax(220px,290px);max-width:1500px;margin:auto;padding:32px clamp(16px,3vw,48px);gap:22px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px}.sidebar,.notes{position:sticky;top:18px}.sidebar h2,.notes h2{font-size:1.1rem;margin:0 0 10px}.meta{color:var(--muted);font-size:.875rem;margin:0 0 16px}progress{width:100%;height:8px;display:block;margin:8px 0 22px;accent-color:var(--accent)}details{border-top:1px solid var(--line);padding:10px 0}summary{cursor:pointer;font-size:.875rem;font-weight:750;letter-spacing:.06em}nav button{display:block;text-align:left;width:100%;border:0;font-size:.875rem;margin-top:4px}nav button[aria-current=page]{background:var(--soft);color:var(--accent);font-weight:700}.saved-list p{margin:8px 0 0}
+.hero{background:#174a53;color:#fff;padding:clamp(20px,4vw,38px);border-radius:14px;margin-bottom:18px}.hero .meta{color:#a9e4da;margin:0;letter-spacing:.1em;font-weight:700}h1{font-size:clamp(2rem,4vw,3.4rem);font-family:Georgia,serif;line-height:1.08;margin:10px 0 12px;font-weight:500}.hero p:last-child{margin:0;color:#e0f3ef}.study{padding:clamp(16px,3vw,28px)}.study-head,.notes-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.study h2{font-size:1.2rem;margin:0}.toolbar{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 6px}.toolbar button,.study-head button{font-size:.875rem}.highlight{display:inline-block;background:var(--mark);width:10px;height:10px;border-radius:2px;margin-right:5px}.editor{overflow-wrap:anywhere;border-top:1px solid var(--line);padding:0 3px}.editor h3{font-size:1.08rem;margin-bottom:6px}.editor p,.editor ul{margin-top:6px}.checklist{border-top:1px solid var(--line);padding-top:15px}.checklist h3{margin:0 0 8px;font-size:1rem}.checklist label{display:flex;align-items:baseline;gap:8px;padding:4px 0}.checklist input{accent-color:var(--accent)}textarea{display:block;width:100%;min-height:200px;resize:vertical;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;color:var(--ink)}.notes .meta:last-child{margin:12px 0 0}
+@media(max-width:1000px){.layout{grid-template-columns:200px minmax(0,1fr)}.notes{grid-column:2;position:static}}@media(max-width:660px){.layout{display:flex;flex-direction:column;padding-top:16px;gap:14px}.layout>*{width:100%;position:static}.brand{font-size:.9rem}.header-actions{justify-content:end}}
+aba-comment[data-comment]{border-bottom:2px dotted var(--accent);cursor:pointer}
+aba-comment[data-comment]:hover,aba-comment[data-comment]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+dialog{color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;width:min(440px,calc(100% - 32px))}
+dialog::backdrop{background:#081423aa}dialog h2{font-size:1.25rem;margin:0 0 8px}
+dialog blockquote{margin:0 0 16px;padding-left:12px;border-left:3px solid var(--accent);overflow-wrap:anywhere;max-height:7em;overflow:auto}
+dialog textarea{min-height:105px;margin:6px 0 14px}.comment-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+[hidden]{display:none!important}
+.exam-category{margin:2px 0 2px 8px}.exam-category summary{font-weight:650;letter-spacing:0;color:var(--muted)}
+.checklist-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.checklist-heading h3{margin:0}.checklist-heading button,.checklist-edit-row button{font-size:.875rem}
+#checklist-rows{display:grid;gap:8px;margin:12px 0;max-height:45vh;overflow:auto;padding:4px}
+.checklist-edit-row{display:flex;align-items:center;gap:6px}
+.checklist-edit-row input{flex:1;min-width:0;padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+#checklist-add{margin-bottom:14px}
+.editor img{max-width:100%;height:auto;vertical-align:middle;border-radius:6px;cursor:pointer}
+.editor.is-image-drop-target{outline:2px dashed var(--accent);outline-offset:3px;background:var(--soft)}
+.image-size-panel{position:fixed;inset:auto 16px 16px auto;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:max-content;max-width:calc(100% - 32px);padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);box-shadow:0 4px 20px #08142330;font-size:.875rem}
+.image-size-panel input{width:clamp(85px,25vw,160px);accent-color:var(--accent)}.image-size-panel output{min-width:3ch;text-align:right;font-variant-numeric:tabular-nums}
+.highlight-controls{display:inline-flex;align-items:stretch;gap:4px}
+.highlight-controls select{max-width:8rem;padding:5px 7px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);font:inherit;font-size:.875rem}
+.highlight-controls input[type=color]{width:34px;min-height:36px;padding:4px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#ff767f,#ffd76b,#8adb9a,#78bdff,#cca3ff)}
+.sidebar.panel,.sidebar details{border:0}
+.sidebar{padding:16px;max-height:calc(100dvh - 36px);overflow:auto}
+.sidebar details{padding:6px 0}.sidebar summary{padding:4px 0}
+.sidebar .outline-add{width:auto;margin-top:4px;padding:5px 8px;color:var(--accent);font-weight:650}
+.topic-row{display:grid;grid-template-columns:minmax(0,1fr) 32px;align-items:start;margin:2px 0 2px 8px}
+.topic-row .topic-title{margin:0;padding:6px;line-height:1.35}
+.topic-row .subsection-add{display:grid;place-items:center;margin:0;padding:0;min-height:32px;background:transparent;color:var(--accent);font-size:1.2rem;line-height:1;opacity:0}
+.topic-row .subsection-add:hover{background:var(--soft)}
+.hero-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.hero-heading button{background:transparent;color:#e0f3ef;border-color:#86b8b8;font-size:.875rem}
+.hero-heading button:hover{background:#24636d}
+#intro{white-space:pre-wrap;overflow-wrap:anywhere}
+#outline-description{min-height:96px;margin:4px 0 14px}
+.topic-row.is-active .subsection-add,.topic-row:hover .subsection-add,.topic-row:focus-within .subsection-add{opacity:1}
+.topic-children{margin-left:36px}.topic-children button{margin-top:1px;padding:5px 7px;line-height:1.35}
+.sidebar-progress{margin-top:12px}.sidebar-progress .meta{margin:0;font-size:.8125rem}.sidebar-progress progress{height:6px;margin:5px 0 0}
+@media(min-width:1001px){.layout{grid-template-columns:minmax(235px,280px) minmax(0,1fr) minmax(220px,290px)}}
+@media(min-width:661px) and (max-width:1000px){.layout{grid-template-columns:minmax(215px,245px) minmax(0,1fr)}}
+@media(max-width:660px){.sidebar{max-height:none;overflow:visible}}
+nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your study text here…";color:var(--muted);pointer-events:none}
+#outline-form label{display:block;margin-top:10px}
+#outline-form input{width:100%;margin:4px 0 10px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12h5l3-7 4 14 3-7h5"/></svg></span> ABA Boards Guide</div><div class="header-actions"><button id="theme">Dark mode</button></div></header>
+<div class="layout">
+<aside class="panel sidebar"><h2>Exam outlines</h2><nav aria-label="Study topics" id="outline"></nav><div class="sidebar-progress"><div id="progress-label" class="meta"></div><progress id="progress" aria-labelledby="progress-label"></progress></div></aside>
+<main><section class="hero"><p class="meta" id="exam"></p><div class="hero-heading"><h1 id="title"></h1><button id="edit-topic">Edit</button></div><p id="intro"></p></section>
+<section class="panel study"><div class="study-head"><h2>Study text</h2><button id="bookmark" aria-pressed="false"></button></div>
+<div class="toolbar" role="group" aria-label="Text formatting"><button data-command="bold" aria-label="Bold"><b>Bold</b></button><button data-command="italic" aria-label="Italic"><i>Italic</i></button><span class="highlight-controls"><button data-command="hiliteColor"><span class="highlight" id="highlight-swatch" aria-hidden="true"></span>Highlight</button><select id="highlight-presets" aria-label="Highlight preset"><option value="#ffe380">Yellow</option><option value="#bcebd0">Green</option><option value="#b8ddff">Blue</option><option value="#ffc5dd">Pink</option><option value="#dfccff">Purple</option><option value="#ffd0a3">Orange</option><option value="" disabled>Custom</option></select><input type="color" id="highlight-color" aria-label="Custom highlight color" title="Open full-spectrum color picker"></span><button data-command="removeFormat">Clear formatting</button></div>
+<p class="meta" id="format-help">Select text to format it or add a comment. Click dotted-underlined text to open its comment.</p>
+<p class="meta" id="image-status" role="status" hidden></p>
+<div id="editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Editable study text" aria-describedby="format-help"></div><section class="checklist"><div class="checklist-heading"><h3>Review checklist</h3><button id="checklist-edit" aria-label="Edit review checklist">Edit</button></div><div id="checks"></div></section></section></main>
+<aside class="panel notes"><div class="notes-head"><h2>Side notes</h2></div><p class="meta" id="notes-topic"></p><textarea id="notes" aria-label="Notes for this topic" placeholder="Add a memory hook, question, or takeaway…"></textarea><p class="meta" id="save-status" role="status"></p></aside>
+</div>
+<div id="image-size-panel" class="image-size-panel" role="group" aria-label="Image size" contenteditable="false" hidden>
+<label for="image-width">Image width</label><input type="range" id="image-width" min="10" max="100" step="1" aria-describedby="image-width-unit"><span id="image-width-unit" hidden>Percent of study text width</span><output id="image-width-value" for="image-width"></output><button id="image-size-done" type="button">Done</button>
+</div>
+<dialog id="comment-dialog" aria-labelledby="comment-title">
+<form id="comment-form"><h2 id="comment-title"></h2><blockquote id="comment-quote"></blockquote>
+<label for="comment-text">Comment</label><textarea id="comment-text" required></textarea>
+<div class="comment-actions"><button type="button" id="comment-delete">Delete comment</button><button type="button" id="comment-cancel">Cancel</button><button id="comment-save">Save comment</button></div>
+</form></dialog>
+<dialog id="outline-dialog" aria-labelledby="outline-title">
+<form id="outline-form"><h2 id="outline-title"></h2>
+<label for="outline-name" id="outline-name-label"></label><input id="outline-name" required maxlength="100">
+<div id="outline-description-field" hidden><label for="outline-description">Description</label><textarea id="outline-description"></textarea></div>
+<div class="comment-actions"><button type="button" id="outline-cancel">Cancel</button><button id="outline-submit"></button></div>
+</form></dialog>
+<dialog id="checklist-dialog" aria-labelledby="checklist-title">
+<form id="checklist-form"><h2 id="checklist-title">Edit review checklist</h2><div id="checklist-rows"></div>
+<button id="checklist-add" type="button">Add item</button>
+<div class="comment-actions"><button id="checklist-cancel" type="button">Cancel</button><button>Save changes</button></div>
+</form></dialog>
+<script>
+const abaIndex = {
+  BASIC: [
+    ['Foundations',[[5,'Anatomy'],[5,'Equipment, monitoring, and physics'],[8,'Math and statistics'],[8,'Drugs and anesthetic agents']]],
+    ['Perioperative care',[[11,'Preoperative assessment and preparation'],[12,'Regional techniques'],[12,'General anesthesia'],[13,'Sedation and monitored care'],[13,'Intraoperative fluids'],[13,'Common adverse events'],[14,'Care after anesthesia']]],
+    ['Organ systems',[[15,'Central and peripheral neurology'],[17,'Pulmonary physiology and care'],[19,'Cardiovascular physiology and care'],[20,'Digestive and liver systems'],[20,'Kidneys, urinary tract, and electrolytes'],[21,'Blood and coagulation'],[22,'Hormonal and metabolic physiology'],[22,'Neuromuscular transmission']]],
+    ['Professional issues',[[23,'Clinician impairment, disability, and well-being'],[23,'Ethics, practice operations, and legal responsibilities']]]
+  ],
+  ADVANCED: [
+    ['Foundations',[[24,'Equipment, monitoring, and physics'],[25,'Advanced pharmacology']]],
+    ['Anesthetic techniques',[[26,'Regional techniques'],[27,'Specialized techniques']]],
+    ['Organ systems',[[27,'Central and peripheral neurology'],[29,'Pulmonary disease and anesthesia'],[31,'Cardiovascular disease and anesthesia'],[34,'Digestive and liver systems'],[35,'Renal disease and electrolyte management'],[35,'Hematology and coagulation'],[36,'Endocrine and metabolic disease'],[37,'Neuromuscular conditions']]],
+    ['Subspecialties',[[38,'Pain conditions'],[39,'Anesthesia for children'],[42,'Anesthesia for pregnancy and childbirth'],[45,'ENT and airway surgery'],[45,'Plastic and reconstructive surgery'],[46,'Laparoscopy and robotic surgery'],[46,'Eye surgery and orbital blocks'],[46,'Orthopedics'],[46,'Trauma'],[46,'Outpatient surgery'],[46,'Anesthesia for older adults'],[46,'Intensive care']]],
+    ['Special settings and professional issues',[[47,'Anesthesia for ECT'],[47,'Care of organ donors'],[47,'Imaging and care outside the operating room'],[47,'Ethics and legal responsibilities'],[49,'Managing an anesthesia practice'],[49,'Improving quality and safety'],[50,'Equity and inclusion in care'],[51,'Disparities in health care']]]
+  ]
+};
+const topics = [
+  ['BASIC','Anesthesia machine','Trace the gas path from source to patient.',
+    '<h3>Gas supply and pressure systems</h3><p>Trace a gas molecule from the cylinder or pipeline through the machine. Identify where pressure is regulated and where gas flow is controlled.</p><h3>Circle system</h3><p>Sketch the inspiratory and expiratory limbs. Label the unidirectional valves, carbon dioxide absorber, and reservoir bag.</p>',
+    ['Sketch the gas path','Label the circle system','Explain the role of the oxygen flush valve']],
+  ['BASIC','Respiratory physiology','Connect gas exchange, lung volumes, and respiratory mechanics.',
+    '<h3>Lung volumes</h3><p>Functional residual capacity is the volume remaining after a normal passive expiration. It is the sum of residual volume and expiratory reserve volume.</p><h3>Gas exchange</h3><p>Review how alveolar ventilation and perfusion interact. Compare the two extremes of ventilation–perfusion mismatch: shunt and dead space.</p>',
+    ['Define functional residual capacity','Compare shunt and dead space']],
+  ['BASIC','Inhaled anesthetics','Review uptake, distribution, and potency.',
+    '<h3>Uptake and wash-in</h3><p>Compare the inspired and alveolar concentrations. Sketch how the alveolar-to-inspired concentration ratio changes with different blood–gas partition coefficients.</p><h3>Potency</h3><p>Review minimum alveolar concentration and explain how it relates to anesthetic potency.</p>',
+    ['Sketch a wash-in curve','Define minimum alveolar concentration']],
+  ['ADVANCED','Cardiopulmonary bypass','Organize your review around the phases of bypass.',
+    '<h3>Before bypass</h3><p>Review the circuit, the roles of the OR team, and how anticoagulation is monitored.</p><h3>Separation from bypass</h3><p>Build a study map with four branches: loading conditions, rhythm, ventricular function, and surgical findings. Add the information that TEE can contribute to each branch.</p>',
+    ['Sketch the bypass circuit','Outline the role of TEE during separation']],
+  ['ADVANCED','Obstetric anesthesia','Review maternal physiology and neuraxial techniques.',
+    '<h3>Maternal physiology</h3><p>Summarize cardiovascular and respiratory changes during pregnancy.</p><h3>Neuraxial techniques</h3><p>Compare spinal, epidural, and combined spinal–epidural techniques by onset, titratability, and duration.</p>',
+    ['Review maternal physiologic changes','Compare neuraxial techniques']]
+];
+const $ = id => document.getElementById(id);
+const key = 'annie-aba-boards-guide-demo-v1';
+let state = {active:0,theme:'light',topics:{},expanded:{BASIC:true,ADVANCED:false,Bookmarks:false},
+  customTopics:[],sections:[]};
+let storageAvailable = true;
+try {
+  const saved = localStorage.getItem(key);
+  if (saved) state = {...state,...JSON.parse(saved)};
+} catch { storageAvailable = false; }
+if (!state.abaTopicsAdded) {
+  for (const [exam,categories] of Object.entries(abaIndex)) {
+    for (const [category,entries] of categories) {
+      for (const [,name] of entries) {
+        const parentIndex = topics.length + state.customTopics.length;
+        state.customTopics.push([exam,name,'','',['Review this topic'],null,null,category]);
+        if (exam === 'BASIC' && name === 'Anatomy') {
+          for (const subsection of ['Topographical Anatomy as Landmarks','Radiological and Ultrasound Anatomy','Clinical Anatomy']) {
+            state.customTopics.push([exam,subsection,'','',['Review this subsection'],null,parentIndex]);
+          }
+        }
+      }
+    }
+  }
+  state.abaTopicsAdded = true;
+}
+for (const topic of state.customTopics) topics.push(topic);
+for (const [index,title] of Object.entries(state.titles ?? {})) {
+  if (topics[index]) topics[index][1] = title;
+}
+let range;
+const formatHelp = $('format-help').textContent;
+const current = () => state.topics[state.active] ??= {notes:'',checks:{},bookmark:false};
+function save() {
+  try { localStorage.setItem(key,JSON.stringify(state)); storageAvailable = true; }
+  catch { storageAvailable = false; }
+  const message = storageAvailable ? 'Saved in this browser' : 'Browser storage unavailable. Changes last until you close or reload.';
+  if ($('save-status').textContent !== message) $('save-status').textContent = message;
+}
+function addTopicLink(container,index,label = topics[index][1]) {
+  const button = document.createElement('button');
+  button.textContent = label;
+  if (index === state.active) button.setAttribute('aria-current','page');
+  button.onclick = () => openTopic(index);
+  container.append(button);
+  return button;
+}
+function letter(position) {
+  let label = '';
+  for (let n = position + 1; n > 0; n = Math.floor((n - 1)/26)) {
+    label = String.fromCharCode(97 + (n - 1)%26) + label;
+  }
+  return label + '.';
+}
+function renderTopicBranches(container,indices) {
+  const parents = indices.filter(i => topics[i][6] == null);
+  parents.forEach((index,position) => {
+    const name = topics[index][1];
+    const children = indices.filter(i => topics[i][6] === index);
+    const row = document.createElement('div');
+    row.className = 'topic-row';
+    const active = index === state.active || children.includes(state.active);
+    row.classList.toggle('is-active',active);
+    const branch = document.createElement('div');
+    branch.className = 'topic-children';
+    if (active) {
+      children.forEach((child,childPosition) => {
+        addTopicLink(branch,child,letter(childPosition) + ' ' + topics[child][1]);
+      });
+    }
+    addTopicLink(row,index,(position + 1) + '. ' + name).className = 'topic-title';
+    const add = document.createElement('button');
+    add.textContent = '+';
+    add.className = 'subsection-add';
+    add.title = 'Add subsection';
+    add.setAttribute('aria-label','Add subsection to ' + topics[index][1]);
+    add.onclick = () => openOutlineForm(topics[index][0],index);
+    row.append(add);
+    container.append(row);
+    if (active && children.length) container.append(branch);
+  });
+}
+function openTopic(index) {
+  state.active = index;
+  const [exam] = topics[index];
+  state.expanded[exam] = true;
+  state.expanded[categoryKey(exam,topicCategory(index))] = true;
+  render();
+  $('title').focus();
+}
+function topicCategory(index) {
+  const topic = topics[index];
+  return topics[topic[6] ?? index][7] ?? 'My topics';
+}
+function categoryKey(exam,category) {
+  return exam + '/category/' + category;
+}
+function disclosure(title,key) {
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.textContent = title;
+  details.append(summary);
+  details.open = !!state.expanded[key];
+  details.ontoggle = () => {
+    if (!details.isConnected) return;
+    state.expanded[key] = details.open;
+    save();
+  };
+  return details;
+}
+function renderNav() {
+  const outline = $('outline');
+  outline.replaceChildren();
+  for (const group of ['BASIC','ADVANCED','Bookmarks']) {
+    const section = disclosure(group,group);
+    const indices = topics.map((_, index) => index).filter(index =>
+      group === 'Bookmarks' ? state.topics[index]?.bookmark : topics[index][0] === group);
+    if (group === 'Bookmarks') {
+      for (const index of indices) addTopicLink(section,index);
+    } else {
+      const categories = [...abaIndex[group].map(([category]) => category),'My topics'];
+      for (const category of categories) {
+        const matching = indices.filter(index => topicCategory(index) === category);
+        if (!matching.length) continue;
+        const key = categoryKey(group,category);
+        state.expanded[key] ??= matching.includes(state.active);
+        const bucket = disclosure(category,key);
+        bucket.className = 'exam-category';
+        renderTopicBranches(bucket,matching);
+        section.append(bucket);
+      }
+      const add = document.createElement('button');
+      add.className = 'outline-add';
+      add.textContent = 'Add topic';
+      add.onclick = () => openOutlineForm(group);
+      section.append(add);
+    }
+    if (group === 'Bookmarks' && !indices.length) {
+      const empty = document.createElement('p');
+      empty.className = 'meta';
+      empty.textContent = 'Bookmarked topics appear here.';
+      section.append(empty);
+    }
+    outline.append(section);
+  }
+}
+const outlineDialog = $('outline-dialog');
+const outlineName = $('outline-name');
+let outlineExam, outlineTopic, editIndex;
+function openOutlineForm(exam,topicIndex,indexToEdit) {
+  outlineExam = exam;
+  outlineTopic = topicIndex;
+  editIndex = indexToEdit;
+  const editing = editIndex != null;
+  const kind = (editing ? topics[editIndex][6] : topicIndex) == null ? 'topic' : 'subsection';
+  $('outline-title').textContent = editing ? 'Edit ' + kind : 'Add ' + kind + ' to ' + (topicIndex == null ? exam : topics[topicIndex][1]);
+  $('outline-name-label').textContent = editing ? 'Title' : kind[0].toUpperCase() + kind.slice(1) + ' name';
+  $('outline-submit').textContent = editing ? 'Save changes' : 'Add ' + kind;
+  outlineName.value = editing ? topics[editIndex][1] : '';
+  $('outline-description-field').hidden = !editing;
+  $('outline-description').value = editing ? state.topics[editIndex]?.description ?? topics[editIndex][2] : '';
+  outlineName.setCustomValidity('');
+  outlineDialog.showModal();
+  outlineName.focus();
+}
+$('edit-topic').onclick = () => openOutlineForm(topics[state.active][0],null,state.active);
+outlineName.oninput = () => outlineName.setCustomValidity('');
+$('outline-cancel').onclick = () => outlineDialog.close();
+$('outline-form').onsubmit = event => {
+  event.preventDefault();
+  const name = outlineName.value.trim();
+  if (!name) {
+    outlineName.setCustomValidity('Enter a name.');
+    outlineName.reportValidity();
+    return;
+  }
+  outlineDialog.close();
+  if (editIndex != null) {
+    (state.titles ??= {})[editIndex] = name;
+    topics[editIndex][1] = name;
+    current().description = $('outline-description').value.trim();
+    render();
+    $('edit-topic').focus();
+    return;
+  }
+  const kind = outlineTopic == null ? 'topic' : 'subsection';
+  const topic = [outlineExam,name,'','',['Review this ' + kind],null,outlineTopic ?? null];
+  state.customTopics.push(topic);
+  topics.push(topic);
+  openTopic(topics.length - 1);
+};
+function checklistItems(index) {
+  return state.topics[index]?.checklist ?? topics[index][4];
+}
+function renderProgress() {
+  const total = topics.reduce((count,_,index) => count + checklistItems(index).length,0);
+  const done = topics.reduce((count,topic,index) => count +
+    checklistItems(index).filter((_,item) => state.topics[index]?.checks[item]).length,0);
+  $('progress').max = total;
+  $('progress').value = done;
+  $('progress-label').textContent = done + ' of ' + total + ' review items checked';
+}
+function renderBookmark() {
+  $('bookmark').textContent = current().bookmark ? '★ Bookmarked' : '☆ Bookmark';
+  $('bookmark').setAttribute('aria-pressed',current().bookmark);
+}
+function render() {
+  const [exam,title,intro,body,,,parentIndex] = topics[state.active];
+  range = null;
+  $('format-help').textContent = formatHelp;
+  $('image-status').hidden = true;
+  $('exam').textContent = exam + ' EXAM' + (parentIndex == null ? '' : ' / ' + topics[parentIndex][1]);
+  $('title').textContent = title;
+  $('title').tabIndex = -1;
+  $('intro').textContent = current().description ?? intro;
+  $('notes-topic').textContent = title;
+  $('notes').value = current().notes;
+  $('editor').innerHTML = current().body ?? body;
+  closeImageSizer();
+  for (const image of $('editor').querySelectorAll('img')) image.tabIndex = 0;
+  renderChecklist();
+  renderNav();
+  renderBookmark();
+  renderProgress();
+  save();
+}
+function renderChecklist() {
+  const items = checklistItems(state.active);
+  const rows = items.map((text,index) => {
+    const label = document.createElement('label');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.checked = !!current().checks[index];
+    box.onchange = () => {current().checks[index] = box.checked; renderProgress(); save();};
+    label.append(box,text);
+    return label;
+  });
+  if (!rows.length) {
+    const empty = document.createElement('p');
+    empty.className = 'meta';
+    empty.textContent = 'No review items yet.';
+    rows.push(empty);
+  }
+  $('checks').replaceChildren(...rows);
+}
+const checklistDialog = $('checklist-dialog');
+const checklistRows = $('checklist-rows');
+function addChecklistRow(text,oldIndex) {
+  const row = document.createElement('div');
+  row.className = 'checklist-edit-row';
+  const input = document.createElement('input');
+  input.value = text;
+  input.required = true;
+  input.setAttribute('aria-label','Review item text');
+  if (oldIndex != null) input.dataset.oldIndex = oldIndex;
+  input.oninput = () => input.setCustomValidity('');
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.textContent = 'Remove';
+  remove.onclick = () => {
+    const next = row.nextElementSibling ?? row.previousElementSibling;
+    row.remove();
+    (next?.querySelector('input') ?? $('checklist-add')).focus();
+  };
+  row.append(input,remove);
+  checklistRows.append(row);
+  return input;
+}
+$('checklist-edit').onclick = () => {
+  checklistRows.replaceChildren();
+  checklistItems(state.active).forEach(addChecklistRow);
+  checklistDialog.showModal();
+  (checklistRows.querySelector('input') ?? $('checklist-add')).focus();
+};
+$('checklist-add').onclick = () => addChecklistRow('').focus();
+$('checklist-cancel').onclick = () => checklistDialog.close();
+$('checklist-form').onsubmit = event => {
+  event.preventDefault();
+  const inputs = [...checklistRows.querySelectorAll('input')];
+  const blank = inputs.find(input => !input.value.trim());
+  if (blank) {
+    blank.setCustomValidity('Enter a review item or remove this row.');
+    blank.reportValidity();
+    return;
+  }
+  const previousChecks = current().checks;
+  current().checklist = inputs.map(input => input.value.trim());
+  current().checks = Object.fromEntries(inputs.flatMap((input,index) =>
+    previousChecks[input.dataset.oldIndex] ? [[index,true]] : []));
+  checklistDialog.close();
+  renderChecklist();
+  renderProgress();
+  save();
+};
+function applyTheme() {
+  document.documentElement.dataset.theme = state.theme;
+  $('theme').textContent = state.theme === 'dark' ? 'Light mode' : 'Dark mode';
+}
+$('theme').onclick = () => {state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); save();};
+$('bookmark').onclick = () => {
+  current().bookmark = !current().bookmark;
+  if (current().bookmark) state.expanded.Bookmarks = true;
+  renderBookmark();
+  renderNav();
+  save();
+};
+$('notes').oninput = () => {current().notes = $('notes').value; save();};
+const editor = $('editor');
+const dialog = $('comment-dialog');
+const commentText = $('comment-text');
+const commentButton = Object.assign(document.createElement('button'), {textContent:'Add comment'});
+document.querySelector('.toolbar').append(commentButton);
+let activeComment;
+let commentRange;
+const commentMarks = () => [...editor.querySelectorAll('aba-comment[data-comment]')];
+function openComment(id, selectedRange) {
+  activeComment = id;
+  commentRange = selectedRange;
+  $('comment-title').textContent = id ? 'Edit comment' : 'Add comment';
+  $('comment-quote').textContent = id
+    ? commentMarks().filter(mark => mark.dataset.comment === id).map(mark => mark.textContent).join(' ')
+    : selectedRange.toString();
+  commentText.value = id ? current().comments[id] : '';
+  $('comment-delete').hidden = !id;
+  dialog.showModal();
+  commentText.focus();
+}
+function selectedTextNodes(selectionRange) {
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+  const segments = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!selectionRange.intersectsNode(node)) continue;
+    const start = node === selectionRange.startContainer ? selectionRange.startOffset : 0;
+    const end = node === selectionRange.endContainer ? selectionRange.endOffset : node.length;
+    if (start < end) segments.push({node,start,end});
+  }
+  return segments;
+}
+commentButton.onmousedown = event => event.preventDefault();
+commentButton.onclick = () => {
+  if (!range || !range.toString().trim() || !editor.contains(range.commonAncestorContainer)) {
+    $('format-help').textContent = 'Select a passage in the study text first.';
+    return;
+  }
+  if (selectedTextNodes(range).some(({node}) => node.parentElement.closest('aba-comment[data-comment]'))) {
+    $('format-help').textContent = 'This selection overlaps a comment. Click its marked text to edit it.';
+    return;
+  }
+  openComment(null,range.cloneRange());
+};
+function findComment(target) {
+  const mark = target.closest('aba-comment[data-comment]');
+  const id = mark?.dataset.comment;
+  return current().comments?.[id] ? id : null;
+}
+editor.addEventListener('click', event => {
+  if (event.target.tagName === 'IMG') {
+    openImageSizer(event.target);
+    return;
+  }
+  closeImageSizer();
+  if (!getSelection().isCollapsed) return;
+  const id = findComment(event.target);
+  if (id) openComment(id);
+});
+editor.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const id = findComment(event.target);
+  if (!id || document.activeElement !== event.target) return;
+  event.preventDefault();
+  openComment(id);
+});
+$('comment-form').onsubmit = event => {
+  event.preventDefault();
+  const text = commentText.value.trim();
+  if (!text) {
+    commentText.setCustomValidity('Enter a comment.');
+    commentText.reportValidity();
+    return;
+  }
+  const id = activeComment ?? Date.now().toString(36) + Math.random().toString(36).slice(2);
+  if (!activeComment) {
+    for (const [index,{node,start,end}] of selectedTextNodes(commentRange).entries()) {
+      if (end < node.length) node.splitText(end);
+      const selected = start ? node.splitText(start) : node;
+      const mark = document.createElement('aba-comment');
+      mark.dataset.comment = id;
+      if (!index) {
+        mark.tabIndex = 0;
+        mark.setAttribute('role','button');
+        mark.setAttribute('aria-label','Open comment: ' + selected.textContent);
+      }
+      selected.replaceWith(mark);
+      mark.append(selected);
+    }
+    range = null;
+    getSelection().removeAllRanges();
+  }
+  (current().comments ??= {})[id] = text;
+  saveText();
+  $('format-help').textContent = formatHelp;
+  dialog.close();
+};
+commentText.oninput = () => commentText.setCustomValidity('');
+dialog.addEventListener('close',() => commentText.setCustomValidity(''));
+$('comment-cancel').onclick = () => dialog.close();
+$('comment-delete').onclick = () => {
+  for (const mark of commentMarks().filter(mark => mark.dataset.comment === activeComment)) {
+    mark.replaceWith(...mark.childNodes);
+  }
+  delete current().comments[activeComment];
+  range = null;
+  saveText();
+  dialog.close();
+};
+function saveText() {current().body = editor.innerHTML; save();}
+const imageWidth = $('image-width');
+let selectedImage;
+function closeImageSizer() {
+  selectedImage = null;
+  $('image-size-panel').hidden = true;
+}
+function openImageSizer(image) {
+  selectedImage = image;
+  const editorStyle = getComputedStyle(editor);
+  const available = editor.clientWidth - parseFloat(editorStyle.paddingLeft) - parseFloat(editorStyle.paddingRight);
+  const actual = available > 0 ? Math.round(image.getBoundingClientRect().width / available * 100) : 100;
+  imageWidth.value = Math.min(100,Math.max(10,actual));
+  $('image-width-value').textContent = imageWidth.value + '%';
+  $('image-size-panel').hidden = false;
+}
+imageWidth.oninput = () => {
+  if (!selectedImage || !editor.contains(selectedImage)) return;
+  selectedImage.style.width = imageWidth.value + '%';
+  $('image-width-value').textContent = selectedImage.style.width;
+};
+imageWidth.onchange = () => {
+  if (selectedImage && editor.contains(selectedImage)) saveText();
+};
+$('image-size-done').onclick = () => {
+  const image = selectedImage;
+  closeImageSizer();
+  if (image && editor.contains(image)) image.focus();
+};
+$('image-size-panel').onkeydown = event => {
+  if (event.key === 'Escape') $('image-size-done').click();
+};
+editor.addEventListener('keydown',event => {
+  if (event.target.tagName !== 'IMG' || !['Enter',' '].includes(event.key)) return;
+  event.preventDefault();
+  openImageSizer(event.target);
+  imageWidth.focus();
+});
+editor.oninput = () => {
+  if (selectedImage && !editor.contains(selectedImage)) closeImageSizer();
+  saveText();
+};
+const imageInput = Object.assign(document.createElement('input'),{
+  type:'file',accept:'image/png,image/jpeg,image/webp,image/gif,image/avif',hidden:true
+});
+const imageButton = Object.assign(document.createElement('button'),{textContent:'Insert image'});
+imageButton.title = 'Choose a file, or paste or drop an image into the study text';
+document.querySelector('.toolbar').append(imageButton,imageInput);
+let imagePosition;
+function insertionPoint() {
+  const position = range && editor.contains(range.commonAncestorContainer)
+    ? range.cloneRange() : document.createRange();
+  if (!range || !editor.contains(range.commonAncestorContainer)) position.selectNodeContents(editor);
+  position.collapse(false);
+  return {topic:state.active,position};
+}
+function imageStatus(message) {
+  $('image-status').textContent = message;
+  $('image-status').hidden = !message;
+}
+function imageData(file) {
+  return new Promise((resolve,reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      try {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1,1600 / Math.max(image.naturalWidth,image.naturalHeight));
+        canvas.width = Math.max(1,Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1,Math.round(image.naturalHeight * scale));
+        canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/webp',.9));
+      } catch (error) {reject(error);}
+    };
+    image.onerror = () => {URL.revokeObjectURL(url); reject(new Error('Image decode failed'));};
+    image.src = url;
+  });
+}
+async function insertImage(file,{topic,position},pasted = false) {
+  imageStatus('');
+  if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(file.type)) {
+    imageStatus('Choose a PNG, JPEG, WebP, GIF, or AVIF image.');
+    return;
+  }
+  let data;
+  try {data = await imageData(file);}
+  catch {
+    if (topic === state.active) imageStatus('Could not open this image. Try a different file.');
+    return;
+  }
+  if (topic !== state.active) {
+    imageStatus('The image was skipped because you switched topics. Return to the original topic to insert it.');
+    return;
+  }
+  if (data.length > 1200000) {
+    imageStatus('This image is too large for browser storage. Try a smaller image.');
+    return;
+  }
+  if (!editor.contains(position.commonAncestorContainer)) {
+    position.selectNodeContents(editor);
+    position.collapse(false);
+  }
+  const image = document.createElement('img');
+  image.src = data;
+  image.alt = pasted ? 'Pasted image' : file.name.replace(/\.[^.]+$/,'');
+  image.tabIndex = 0;
+  editor.focus();
+  const selection = getSelection();
+  selection.removeAllRanges();
+  selection.addRange(position);
+  if (document.execCommand('insertHTML',false,image.outerHTML)) saveText();
+  else imageStatus('The image could not be inserted. Click in the study text and try again.');
+}
+imageButton.onmousedown = event => event.preventDefault();
+imageButton.onclick = () => {
+  imagePosition = insertionPoint();
+  imageInput.click();
+};
+imageInput.onchange = () => {
+  const file = imageInput.files[0];
+  imageInput.value = '';
+  if (file) insertImage(file,imagePosition);
+};
+function clipboardImage(clipboard) {
+  const file = Array.from(clipboard.files ?? []).find(file => file.type.startsWith('image/'));
+  if (file) return file;
+  for (const item of clipboard.items ?? []) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const image = item.getAsFile();
+      if (image) return image;
+    }
+  }
+  return null;
+}
+editor.onpaste = event => {
+  if (!event.clipboardData) return;
+  event.preventDefault();
+  const file = clipboardImage(event.clipboardData);
+  if (file) {
+    const selection = getSelection();
+    if (selection.rangeCount && editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+      range = selection.getRangeAt(0).cloneRange();
+    }
+    insertImage(file,insertionPoint(),true);
+    return;
+  }
+  document.execCommand('insertText',false,event.clipboardData.getData('text/plain'));
+};
+function dropPosition(x,y) {
+  const caret = document.caretPositionFromPoint?.(x,y);
+  let position;
+  if (caret && editor.contains(caret.offsetNode)) {
+    position = document.createRange();
+    position.setStart(caret.offsetNode,caret.offset);
+  } else {
+    position = document.caretRangeFromPoint?.(x,y);
+    if (!position || !editor.contains(position.commonAncestorContainer)) {
+      position = document.createRange();
+      position.selectNodeContents(editor);
+      position.collapse(false);
+      return {topic:state.active,position};
+    }
+  }
+  position.collapse(true);
+  return {topic:state.active,position};
+}
+editor.ondragover = event => {
+  event.preventDefault();
+  if (!event.dataTransfer?.types.includes('Files')) return;
+  event.dataTransfer.dropEffect = 'copy';
+  editor.classList.add('is-image-drop-target');
+};
+editor.ondragleave = event => {
+  if (!editor.contains(event.relatedTarget)) editor.classList.remove('is-image-drop-target');
+};
+editor.ondrop = event => {
+  event.preventDefault();
+  editor.classList.remove('is-image-drop-target');
+  if (!event.dataTransfer) return;
+  const file = clipboardImage(event.dataTransfer);
+  if (file) insertImage(file,dropPosition(event.clientX,event.clientY));
+  else if (event.dataTransfer.files.length) imageStatus('Drop a screenshot or image file here.');
+};
+document.addEventListener('selectionchange',() => {
+  const selection = getSelection();
+  if (selection.rangeCount && editor.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+    range = selection.getRangeAt(0).cloneRange();
+  }
+});
+const highlightColor = $('highlight-color');
+const highlightPresets = $('highlight-presets');
+highlightColor.value = /^#[0-9a-f]{6}$/i.test(state.highlightColor) ? state.highlightColor : '#ffe380';
+function showHighlightColor() {
+  $('highlight-swatch').style.backgroundColor = highlightColor.value;
+  highlightPresets.value = highlightColor.value;
+  if (highlightPresets.selectedIndex === -1) highlightPresets.value = '';
+}
+highlightColor.oninput = showHighlightColor;
+highlightColor.onchange = () => {
+  state.highlightColor = highlightColor.value;
+  showHighlightColor();
+  save();
+};
+highlightPresets.onchange = () => {
+  highlightColor.value = highlightPresets.value;
+  highlightColor.onchange();
+};
+showHighlightColor();
+function highlightInk(hex) {
+  const rgb = [1,3,5].map(offset => {
+    const channel = parseInt(hex.slice(offset,offset + 2),16) / 255;
+    return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+  });
+  const luminance = .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+  return luminance > .179 ? '#000000' : '#ffffff';
+}
+for (const button of document.querySelectorAll('[data-command]')) {
+  button.onmousedown = event => event.preventDefault();
+  button.onclick = () => {
+    if (!range || range.collapsed || !editor.contains(range.commonAncestorContainer)) {
+      $('format-help').textContent = 'Select a passage in the study text first.';
+      return;
+    }
+    editor.focus();
+    const selection = getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const command = button.dataset.command;
+    document.execCommand(command,false,command === 'hiliteColor' ? highlightColor.value : null);
+    if (command === 'hiliteColor') document.execCommand('foreColor',false,highlightInk(highlightColor.value));
+    $('format-help').textContent = formatHelp;
+    saveText();
+  };
+}
+applyTheme();
+render();
+</script>
+</body>
+</html>
