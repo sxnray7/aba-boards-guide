@@ -54,11 +54,19 @@ dialog textarea{min-height:105px;margin:6px 0 14px}.comment-actions{display:flex
 nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your study text here…";color:var(--muted);pointer-events:none}
 #outline-form label{display:block;margin-top:10px}
 #outline-form input{width:100%;margin:4px 0 10px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-</style>
+.cloud-panel{max-width:420px;margin:22px auto;padding:18px}.cloud-panel label{display:block}.cloud-panel input{display:block;max-width:100%;width:100%;margin:6px 0 12px;padding:8px;font:inherit}.cloud-panel:has(form[hidden]):has(#cloud-onboard[hidden]){padding:0;border:0;margin:8px auto;background:none}.cloud-panel p{margin:0;text-align:center}</style>
 </head>
 <body>
-<header><div class="brand"><span class="symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12h5l3-7 4 14 3-7h5"/></svg></span> ABA Boards Guide</div><div class="header-actions"><button id="theme">Dark mode</button></div></header>
-<div class="layout">
+<header><div class="brand"><span class="symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12h5l3-7 4 14 3-7h5"/></svg></span> ABA Boards Guide</div><div class="header-actions"><button id="cloud-export" hidden>Export backup</button><button id="cloud-signout" hidden>Sign out</button><button id="theme" hidden>Dark mode</button></div></header>
+<section class="panel cloud-panel">
+<form id="cloud-login"><h2>Sign in to your study guide</h2>
+<label>Email<input id="cloud-email" type="email" autocomplete="username" required></label>
+<label>Password<input id="cloud-password" type="password" autocomplete="current-password" required></label>
+<button id="cloud-enter">Sign in</button></form>
+<div id="cloud-onboard" hidden><label>Import your guide backup<input id="cloud-import" type="file" accept=".json,application/json"></label></div>
+<p id="cloud-status" role="status"></p>
+</section><div class="layout" id="guide-layout" hidden>
+
 <aside class="panel sidebar"><h2>Exam outlines</h2><nav aria-label="Study topics" id="outline"></nav><div class="sidebar-progress"><div id="progress-label" class="meta"></div><progress id="progress" aria-labelledby="progress-label"></progress></div></aside>
 <main><section class="hero"><p class="meta" id="exam"></p><div class="hero-heading"><h1 id="title"></h1><button id="edit-topic">Edit</button></div><p id="intro"></p></section>
 <section class="panel study"><div class="study-head"><h2>Study text</h2><button id="bookmark" aria-pressed="false"></button></div>
@@ -87,77 +95,211 @@ nav button,h1{overflow-wrap:anywhere}.editor:empty::before{content:"Add your stu
 <button id="checklist-add" type="button">Add item</button>
 <div class="comment-actions"><button id="checklist-cancel" type="button">Cancel</button><button>Save changes</button></div>
 </form></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
-const abaIndex = {
-  BASIC: [
-    ['Foundations',[[5,'Anatomy'],[5,'Equipment, monitoring, and physics'],[8,'Math and statistics'],[8,'Drugs and anesthetic agents']]],
-    ['Perioperative care',[[11,'Preoperative assessment and preparation'],[12,'Regional techniques'],[12,'General anesthesia'],[13,'Sedation and monitored care'],[13,'Intraoperative fluids'],[13,'Common adverse events'],[14,'Care after anesthesia']]],
-    ['Organ systems',[[15,'Central and peripheral neurology'],[17,'Pulmonary physiology and care'],[19,'Cardiovascular physiology and care'],[20,'Digestive and liver systems'],[20,'Kidneys, urinary tract, and electrolytes'],[21,'Blood and coagulation'],[22,'Hormonal and metabolic physiology'],[22,'Neuromuscular transmission']]],
-    ['Professional issues',[[23,'Clinician impairment, disability, and well-being'],[23,'Ethics, practice operations, and legal responsibilities']]]
-  ],
-  ADVANCED: [
-    ['Foundations',[[24,'Equipment, monitoring, and physics'],[25,'Advanced pharmacology']]],
-    ['Anesthetic techniques',[[26,'Regional techniques'],[27,'Specialized techniques']]],
-    ['Organ systems',[[27,'Central and peripheral neurology'],[29,'Pulmonary disease and anesthesia'],[31,'Cardiovascular disease and anesthesia'],[34,'Digestive and liver systems'],[35,'Renal disease and electrolyte management'],[35,'Hematology and coagulation'],[36,'Endocrine and metabolic disease'],[37,'Neuromuscular conditions']]],
-    ['Subspecialties',[[38,'Pain conditions'],[39,'Anesthesia for children'],[42,'Anesthesia for pregnancy and childbirth'],[45,'ENT and airway surgery'],[45,'Plastic and reconstructive surgery'],[46,'Laparoscopy and robotic surgery'],[46,'Eye surgery and orbital blocks'],[46,'Orthopedics'],[46,'Trauma'],[46,'Outpatient surgery'],[46,'Anesthesia for older adults'],[46,'Intensive care']]],
-    ['Special settings and professional issues',[[47,'Anesthesia for ECT'],[47,'Care of organ donors'],[47,'Imaging and care outside the operating room'],[47,'Ethics and legal responsibilities'],[49,'Managing an anesthesia practice'],[49,'Improving quality and safety'],[50,'Equity and inclusion in care'],[51,'Disparities in health care']]]
-  ]
-};
-const topics = [
-  ['BASIC','Anesthesia machine','Trace the gas path from source to patient.',
-    '<h3>Gas supply and pressure systems</h3><p>Trace a gas molecule from the cylinder or pipeline through the machine. Identify where pressure is regulated and where gas flow is controlled.</p><h3>Circle system</h3><p>Sketch the inspiratory and expiratory limbs. Label the unidirectional valves, carbon dioxide absorber, and reservoir bag.</p>',
-    ['Sketch the gas path','Label the circle system','Explain the role of the oxygen flush valve']],
-  ['BASIC','Respiratory physiology','Connect gas exchange, lung volumes, and respiratory mechanics.',
-    '<h3>Lung volumes</h3><p>Functional residual capacity is the volume remaining after a normal passive expiration. It is the sum of residual volume and expiratory reserve volume.</p><h3>Gas exchange</h3><p>Review how alveolar ventilation and perfusion interact. Compare the two extremes of ventilation–perfusion mismatch: shunt and dead space.</p>',
-    ['Define functional residual capacity','Compare shunt and dead space']],
-  ['BASIC','Inhaled anesthetics','Review uptake, distribution, and potency.',
-    '<h3>Uptake and wash-in</h3><p>Compare the inspired and alveolar concentrations. Sketch how the alveolar-to-inspired concentration ratio changes with different blood–gas partition coefficients.</p><h3>Potency</h3><p>Review minimum alveolar concentration and explain how it relates to anesthetic potency.</p>',
-    ['Sketch a wash-in curve','Define minimum alveolar concentration']],
-  ['ADVANCED','Cardiopulmonary bypass','Organize your review around the phases of bypass.',
-    '<h3>Before bypass</h3><p>Review the circuit, the roles of the OR team, and how anticoagulation is monitored.</p><h3>Separation from bypass</h3><p>Build a study map with four branches: loading conditions, rhythm, ventricular function, and surgical findings. Add the information that TEE can contribute to each branch.</p>',
-    ['Sketch the bypass circuit','Outline the role of TEE during separation']],
-  ['ADVANCED','Obstetric anesthesia','Review maternal physiology and neuraxial techniques.',
-    '<h3>Maternal physiology</h3><p>Summarize cardiovascular and respiratory changes during pregnancy.</p><h3>Neuraxial techniques</h3><p>Compare spinal, epidural, and combined spinal–epidural techniques by onset, titratability, and duration.</p>',
-    ['Review maternal physiologic changes','Compare neuraxial techniques']]
-];
 const $ = id => document.getElementById(id);
-const key = 'annie-aba-boards-guide-demo-v1';
-let state = {active:0,theme:'light',topics:{},expanded:{BASIC:true,ADVANCED:false,Bookmarks:false},
-  customTopics:[],sections:[]};
-let storageAvailable = true;
-try {
-  const saved = localStorage.getItem(key);
-  if (saved) state = {...state,...JSON.parse(saved)};
-} catch { storageAvailable = false; }
-if (!state.abaTopicsAdded) {
-  for (const [exam,categories] of Object.entries(abaIndex)) {
-    for (const [category,entries] of categories) {
-      for (const [,name] of entries) {
-        const parentIndex = topics.length + state.customTopics.length;
-        state.customTopics.push([exam,name,'','',['Review this topic'],null,null,category]);
-        if (exam === 'BASIC' && name === 'Anatomy') {
-          for (const subsection of ['Topographical Anatomy as Landmarks','Radiological and Ultrasound Anatomy','Clinical Anatomy']) {
-            state.customTopics.push([exam,subsection,'','',['Review this subsection'],null,parentIndex]);
-          }
-        }
+const client = window.supabase?.createClient(
+  'https://abltiivvndakwryydtgm.supabase.co',
+  'sb_publishable_S0KalkTaQj9F7KBKyHUb1g_ZC2sG6rq'
+);
+let state, topics = [], owner, revision, timer, saving = false, dirty = false;
+let baseline = '', blocked = false;
+function message(text) {
+  $('cloud-status').textContent = text;
+  $('save-status').textContent = text;
+}
+function snapshot() {
+  const {active,expanded,...content} = state;
+  return JSON.stringify(content);
+}
+function install(content) {
+  const active = state?.active ?? 0;
+  state = {...content,active,expanded:{BASIC:true,ADVANCED:false,Bookmarks:false}};
+  topics = [...state.baseTopics,...state.customTopics].map(topic => [...topic]);
+  for (const [index,title] of Object.entries(state.titles ?? {})) {
+    if (topics[index]) topics[index][1] = title;
+  }
+  if (!topics[active]) state.active = 0;
+  baseline = snapshot();
+  const branch = topics[state.active];
+  state.expanded[branch[0]] = true;
+  $('cloud-onboard').hidden = true;
+  $('guide-layout').hidden = false;
+  $('theme').hidden = false;
+  highlightColor.value = /^#[0-9a-f]{6}$/i.test(state.highlightColor) ? state.highlightColor : '#ffe380';
+  showHighlightColor();
+  applyTheme();
+  render();
+  message('Synced');
+}
+function save() {
+  if (!owner || !state || snapshot() === baseline) return;
+  dirty = true;
+  if (blocked) return;
+  message('Unsaved changes…');
+  clearTimeout(timer);
+  timer = setTimeout(flush,400);
+}
+async function flush() {
+  if (!dirty || saving || blocked || !owner) return;
+  saving = true;
+  dirty = false;
+  const content = snapshot();
+  try {
+    const {data,error} = await client.from('study_guide')
+      .update({content:JSON.parse(content),revision:revision + 1})
+      .eq('owner',owner).eq('revision',revision).select('revision').maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      blocked = true;
+      message('Another device saved changes. Export a backup before reloading.');
+      return;
+    }
+    revision = data.revision;
+    baseline = content;
+    if (snapshot() !== baseline) {
+      dirty = true;
+      clearTimeout(timer);
+      timer = setTimeout(flush,400);
+    } else {
+      dirty = false;
+      message('Synced');
+    }
+  } catch {
+    dirty = true;
+    message('Sync failed. Reconnect or export a backup before closing.');
+  } finally {saving = false;}
+}
+function exportBackup() {
+  if (!state) return;
+  const url = URL.createObjectURL(new Blob([snapshot()],{type:'application/json'}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'aba-guide-backup.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url),1000);
+}
+function cleanHTML(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const allowed = new Set('P DIV SPAN BR B STRONG I EM U S STRIKE SUB SUP H1 H2 H3 H4 H5 H6 UL OL LI BLOCKQUOTE PRE CODE IMG FONT ABA-COMMENT'.split(' '));
+  for (const el of template.content.querySelectorAll('*')) {
+    if (!allowed.has(el.tagName)) {
+      el.replaceWith(document.createTextNode(el.textContent));
+      continue;
+    }
+    for (const attr of [...el.attributes]) {
+      if (attr.name === 'src' && el.tagName === 'IMG' &&
+          /^data:image\/(webp|png|jpeg);base64,[a-z0-9+/=]+$/i.test(attr.value)) continue;
+      if (['alt','tabindex','role','aria-label','data-comment','color','face','size'].includes(attr.name)) continue;
+      if (attr.name === 'style') {
+        const keep = Array.from(el.style).filter(prop =>
+          ['color','background-color','font-weight','font-style','text-decoration','width'].includes(prop));
+        const safe = keep.map(prop => prop + ':' + el.style.getPropertyValue(prop)).join(';');
+        el.setAttribute('style',safe);
+        continue;
       }
+      el.removeAttribute(attr.name);
     }
   }
-  state.abaTopicsAdded = true;
+  return template.innerHTML;
 }
-for (const topic of state.customTopics) topics.push(topic);
-for (const [index,title] of Object.entries(state.titles ?? {})) {
-  if (topics[index]) topics[index][1] = title;
+function readBackup(content) {
+  if (!Array.isArray(content.baseTopics) || !Array.isArray(content.customTopics) ||
+      !content.topics || !content.categories) throw Error('Invalid guide backup');
+  const entries = [...content.baseTopics,...content.customTopics];
+  if (!entries.length || entries.some(topic => !Array.isArray(topic) || !['BASIC','ADVANCED'].includes(topic[0]) ||
+      typeof topic[1] !== 'string' || !Array.isArray(topic[4]) ||
+      (topic[6] != null && !entries[topic[6]]))) throw Error('Invalid topics');
+  for (const topic of entries) topic[3] = cleanHTML(String(topic[3] ?? ''));
+  for (const topic of Object.values(content.topics)) {
+    if (typeof topic.body === 'string') topic.body = cleanHTML(topic.body);
+    topic.checks ??= {};
+  }
+  return content;
 }
+async function loadCloud() {
+  const id = owner;
+  if (!id || dirty || saving || blocked) return;
+  const {data,error} = await client.from('study_guide').select('content,revision').eq('owner',id).maybeSingle();
+  if (owner !== id || dirty || saving || blocked) return;
+  if (error) {message('Could not load the guide. Check that setup.sql has been run.'); return;}
+  if (!data) {
+    $('cloud-onboard').hidden = false;
+    message('Import a backup to start your private guide.');
+    return;
+  }
+  if (revision !== data.revision || !state) {
+    try {
+      const content = readBackup(data.content);
+      revision = data.revision;
+      install(content);
+    } catch {message('Could not read the saved guide.');}
+  }
+}
+$('cloud-import').onchange = async event => {
+  const file = event.target.files[0];
+  event.target.value = '';
+  if (!file || !owner || state) return;
+  const id = owner;
+  try {
+    const content = readBackup(JSON.parse(await file.text()));
+    if (id !== owner || state) return;
+    const {data,error} = await client.from('study_guide')
+      .insert({owner:id,content,revision:1}).select('revision').single();
+    if (error) throw error;
+    if (id !== owner) return;
+    revision = data.revision;
+    install(content);
+  } catch {
+    message('Import failed. Check that the backup came from the guide and setup.sql has been run.');
+  }
+};
+function startCloud() {
+  if (!client) {message('Could not load the sign-in service.'); return;}
+  async function start(session) {
+    if (!session || owner) return;
+    owner = session.user.id;
+    $('cloud-login').hidden = true;
+    $('cloud-signout').hidden = false;
+    $('cloud-export').hidden = false;
+    await loadCloud();
+  }
+  $('cloud-login').onsubmit = async event => {
+    event.preventDefault();
+    $('cloud-enter').disabled = true;
+    try {
+      const {data,error} = await client.auth.signInWithPassword({
+        email:$('cloud-email').value, password:$('cloud-password').value
+      });
+      $('cloud-password').value = '';
+      if (error) throw error;
+      await start(data.session);
+    } catch {message('Sign-in failed. Check your email and password.');}
+    finally {$('cloud-enter').disabled = false;}
+  };
+  $('cloud-signout').onclick = async () => {
+    if (saving) {message('Wait for the current save before signing out.'); return;}
+    await flush();
+    if (dirty || blocked) {message('Export a backup before leaving this unsynced guide.'); return;}
+    const {error} = await client.auth.signOut({scope:'local'});
+    if (error) message('Sign-out failed. Please try again.');
+    else location.reload();
+  };
+  $('cloud-export').onclick = exportBackup;
+  window.addEventListener('focus',() => dirty ? flush() : loadCloud());
+  window.addEventListener('online',flush);
+  window.addEventListener('beforeunload',event => {
+    if (!dirty && !saving && !blocked) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+  client.auth.getSession().then(({data}) => start(data.session));
+}
+
 let range;
 const formatHelp = $('format-help').textContent;
 const current = () => state.topics[state.active] ??= {notes:'',checks:{},bookmark:false};
-function save() {
-  try { localStorage.setItem(key,JSON.stringify(state)); storageAvailable = true; }
-  catch { storageAvailable = false; }
-  const message = storageAvailable ? 'Saved in this browser' : 'Browser storage unavailable. Changes last until you close or reload.';
-  if ($('save-status').textContent !== message) $('save-status').textContent = message;
-}
 function addTopicLink(container,index,label = topics[index][1]) {
   const button = document.createElement('button');
   button.textContent = label;
@@ -239,7 +381,7 @@ function renderNav() {
     if (group === 'Bookmarks') {
       for (const index of indices) addTopicLink(section,index);
     } else {
-      const categories = [...abaIndex[group].map(([category]) => category),'My topics'];
+      const categories = [...(state.categories[group] ?? []),'My topics'];
       for (const category of categories) {
         const matching = indices.filter(index => topicCategory(index) === category);
         if (!matching.length) continue;
@@ -726,7 +868,7 @@ document.addEventListener('selectionchange',() => {
 });
 const highlightColor = $('highlight-color');
 const highlightPresets = $('highlight-presets');
-highlightColor.value = /^#[0-9a-f]{6}$/i.test(state.highlightColor) ? state.highlightColor : '#ffe380';
+highlightColor.value = '#ffe380';
 function showHighlightColor() {
   $('highlight-swatch').style.backgroundColor = highlightColor.value;
   highlightPresets.value = highlightColor.value;
@@ -769,8 +911,7 @@ for (const button of document.querySelectorAll('[data-command]')) {
     saveText();
   };
 }
-applyTheme();
-render();
+startCloud();
 </script>
 </body>
 </html>
